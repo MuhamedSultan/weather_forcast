@@ -1,4 +1,4 @@
-package com.example.weatherforcast.pojo
+package com.example.weatherforcast.pojo.current_weather
 
 data class Weather(
     val description: String,
