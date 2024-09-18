@@ -6,4 +6,7 @@
     <string name="favourites">Favourites</string>
     <string name="alerts">Alerts</string>
     <string name="settings">Settings</string>
+    <string name="wind">Wind</string>
+    <string name="humidity">Humidity</string>
+    <string name="rain">Rain</string>
 </resources>

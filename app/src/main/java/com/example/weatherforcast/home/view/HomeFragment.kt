@@ -4,13 +4,19 @@ import RemoteDataSourceImpl
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import com.example.weatherforcast.utils.Result
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
@@ -21,12 +27,18 @@ import com.example.weatherforcast.home.repo.HomeRepository
 import com.example.weatherforcast.home.repo.HomeRepositoryImpl
 import com.example.weatherforcast.home.viewmodel.HomeViewModel
 import com.example.weatherforcast.home.viewmodel.HomeViewModelFactory
+import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.material.snackbar.Snackbar
+import java.io.IOException
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 class HomeFragment : Fragment() {
@@ -53,6 +65,7 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -63,22 +76,63 @@ class HomeFragment : Fragment() {
                 locationResult.lastLocation?.let { location ->
                     Log.i(TAG, "Location: ${location.latitude}, ${location.longitude}")
                     homeViewModel.getCurrentWeather(location.latitude, location.longitude)
+                    getAddressFromLocation(location)
                 }
             }
         }
-        homeViewModel.currentWeather.observe(viewLifecycleOwner) { currentWeather ->
-            binding.tempTv.text = currentWeather.main.temp.toString()
-            Glide.with(requireContext())
-                .load("https://openweathermap.org/img/wn/${currentWeather.weather[0].icon}@2x.png")
-                .into(binding.tempImage)
+        homeViewModel.weatherResult.observe(viewLifecycleOwner) { weatherResult ->
+            when (weatherResult) {
+                is Result.Success -> {
+                    weatherResult.data?.let { result ->
+                        showData(result)
+                    }
+                }
+
+                is Result.Error -> {
+                    showError(weatherResult.message)
+                }
+            }
         }
 
+
+    }
+
+    override fun onResume() {
+        super.onResume()
         if (checkPermissions()) {
             getLocation()
         } else {
             requestLocationPermissions()
         }
+    }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun showData(result: WeatherResponse) {
+        val tempKelvin = result.main.temp
+        val tempCelsius = tempKelvin - 273.15
+        binding.tempTv.text = "%.2f °C".format(tempCelsius)
+
+        Glide.with(requireContext())
+            .load("https://openweathermap.org/img/wn/10d@2x.png")
+            .into(binding.tempImage)
+        binding.dataTv.text=getCurrentDate()
+
+        val windSpeed = result.wind.speed
+        val humidity = result.main.humidity
+        val rain = result.rain?.`1h` ?: 0.0
+
+        val windSpeedText = "%.2f m/s".format(windSpeed)
+        val humidityText = "%d%%".format(humidity)
+        val rainText = "%.2f mm".format(rain)
+
+        binding.windTv.text = windSpeedText
+        binding.humidityTv.text = humidityText
+        binding.rainTv.text = rainText
+
+    }
+
+    private fun showError(message: String?) {
+        Snackbar.make(requireView(), message.toString(), Snackbar.LENGTH_SHORT).show()
 
     }
 
@@ -113,5 +167,32 @@ class HomeFragment : Fragment() {
             Looper.getMainLooper()
         )
     }
+
+    private fun getAddressFromLocation(location: Location) {
+        val geocoder = Geocoder(requireContext(), Locale.getDefault())
+        try {
+            val addresses: MutableList<Address>? =
+                geocoder.getFromLocation(location.latitude, location.longitude, 1)
+
+            if (addresses!!.isNotEmpty()) {
+                val address: Address = addresses[0]
+                val addressString: String? = address.adminArea
+                binding.cityTv.text = addressString
+                Log.i(TAG, "Address: $addressString")
+            } else {
+                Log.e(TAG, "No address found for location")
+            }
+        } catch (e: IOException) {
+            Log.e(TAG, "Geocoder failed", e)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getCurrentDate(): String {
+        val currentDate = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern("dd MMMM EEEE", Locale.ENGLISH)
+        return currentDate.format(formatter)
+    }
+
 }
 

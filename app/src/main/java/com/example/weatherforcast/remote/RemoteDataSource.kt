@@ -1,6 +1,8 @@
 package com.example.weatherforcast.remote
 
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
+import com.example.weatherforcast.utils.Result
+
 
 interface RemoteDataSource {
 

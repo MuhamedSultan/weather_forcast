@@ -8,21 +8,15 @@ import com.example.weatherforcast.home.repo.HomeRepository
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.weatherforcast.utils.Result
 
 class HomeViewModel(private val homeRepository: HomeRepository) : ViewModel() {
 
-    private val _currentWeather: MutableLiveData<WeatherResponse> = MutableLiveData()
-    val currentWeather: LiveData<WeatherResponse> = _currentWeather
+    private val _weatherResult: MutableLiveData<Result<WeatherResponse>> = MutableLiveData()
+    val weatherResult: LiveData<Result<WeatherResponse>> = _weatherResult
 
-    private val _error: MutableLiveData<String> = MutableLiveData()
-    val error: LiveData<String> = _error
-
-
-    fun getCurrentWeather(lat: Double, lon: Double) =
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = homeRepository.getCurrentWeather(lat, lon)
-            result.onSuccess { weatherResponse ->
-                _currentWeather.postValue(weatherResponse)
-            }
-        }
+    fun getCurrentWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
+        val result = homeRepository.getCurrentWeather(lat, lon)
+        _weatherResult.postValue(result)
+    }
 }
