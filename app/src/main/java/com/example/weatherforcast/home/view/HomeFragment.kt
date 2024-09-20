@@ -16,10 +16,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.HorizontalScrollView
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.weatherforcast.R
 import com.example.weatherforcast.databinding.FragmentHomeBinding
@@ -28,6 +30,7 @@ import com.example.weatherforcast.home.repo.HomeRepositoryImpl
 import com.example.weatherforcast.home.viewmodel.HomeViewModel
 import com.example.weatherforcast.home.viewmodel.HomeViewModelFactory
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
+import com.example.weatherforcast.pojo.days_weather.State
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -36,8 +39,10 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.material.snackbar.Snackbar
 import java.io.IOException
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Locale
 
 
@@ -76,6 +81,7 @@ class HomeFragment : Fragment() {
                 locationResult.lastLocation?.let { location ->
                     Log.i(TAG, "Location: ${location.latitude}, ${location.longitude}")
                     homeViewModel.getCurrentWeather(location.latitude, location.longitude)
+                    homeViewModel.getDaysWeather(location.latitude, location.longitude)
                     getAddressFromLocation(location)
                 }
             }
@@ -88,6 +94,23 @@ class HomeFragment : Fragment() {
                     }
                 }
 
+                is Result.Error -> {
+                    showError(weatherResult.message)
+                }
+            }
+        }
+
+
+
+
+        homeViewModel.daysWeatherResult.observe(viewLifecycleOwner) { weatherResult ->
+            when (weatherResult) {
+                is Result.Success -> {
+                    weatherResult.data?.let { result ->
+                        showTodayWeather2(result.list)
+                        showNextDaysWeather(result.list)
+                    }
+                }
                 is Result.Error -> {
                     showError(weatherResult.message)
                 }
@@ -113,9 +136,9 @@ class HomeFragment : Fragment() {
         binding.tempTv.text = "%.2f °C".format(tempCelsius)
 
         Glide.with(requireContext())
-            .load("https://openweathermap.org/img/wn/10d@2x.png")
+            .load("https://openweathermap.org/img/wn/${result.weather[0].icon}@2x.png")
             .into(binding.tempImage)
-        binding.dataTv.text=getCurrentDate()
+        binding.dataTv.text = getCurrentDate()
 
         val windSpeed = result.wind.speed
         val humidity = result.main.humidity
@@ -157,7 +180,7 @@ class HomeFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun getLocation() {
-        val locationRequest = LocationRequest.Builder(0).apply {
+        val locationRequest = LocationRequest.Builder(60000).apply {
             setPriority(Priority.PRIORITY_HIGH_ACCURACY)
         }.build()
 
@@ -186,6 +209,76 @@ class HomeFragment : Fragment() {
             Log.e(TAG, "Geocoder failed", e)
         }
     }
+
+    private fun setupHoursRecyclerview(state: List<State>) {
+        val hoursAdapter = HoursAdapter(requireContext(), state)
+        val hoursLayoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        binding.hoursRv.apply {
+            adapter = hoursAdapter
+            layoutManager = hoursLayoutManager
+        }
+    }
+
+    private fun setupDaysRecyclerview(state: List<State>) {
+        val hoursAdapter = HoursAdapter(requireContext(), state)
+        val hoursLayoutManager =
+            LinearLayoutManager(requireContext())
+        binding.daysRv.apply {
+            adapter = hoursAdapter
+            layoutManager = hoursLayoutManager
+        }
+    }
+
+    private fun showTodayWeather(list: List<State>) {
+        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val todayWeather = list.filter { it.dt_txt.startsWith(currentDate) }
+        println("Today's Weather (every 3 hours):")
+        todayWeather.forEach { weather ->
+            val time = inputFormat.parse(weather.dt_txt)?.let { timeFormat.format(it) }
+            println("Time: $time, Temp: ${weather.main.temp}°K, ${weather.weather[0].description}")
+            setupHoursRecyclerview(todayWeather)
+        }
+    }
+
+
+    private fun showTodayWeather2(list: List<State>) {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())  // Input format includes date and time
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())  // Desired output format (only time)
+
+        val limitedWeatherList = list.take(8).map { weather ->
+            val time = timeFormat.format(inputFormat.parse(weather.dt_txt)!!)
+            weather.copy(dt_txt = time)
+        }
+        setupHoursRecyclerview(limitedWeatherList)
+    }
+
+
+
+    private fun showNextDaysWeather(list: List<State>) {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())  // Input format includes date and time
+        val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())  // Output format to get the day name
+
+        val weatherPerDay = mutableMapOf<String, State>()
+
+        list.forEach { weather ->
+            val date = inputFormat.parse(weather.dt_txt)!!
+            val dayName = dayFormat.format(date)
+
+            if (!weatherPerDay.containsKey(dayName)) {
+                weatherPerDay[dayName] = weather.copy(dt_txt = dayName)
+            }
+        }
+        val upcomingWeatherList = weatherPerDay.map { (dayName, state) ->
+            state.copy(dt_txt = dayName)
+        }.toList()
+        setupDaysRecyclerview(upcomingWeatherList)
+    }
+
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getCurrentDate(): String {
