@@ -221,11 +221,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupDaysRecyclerview(state: List<State>) {
-        val hoursAdapter = HoursAdapter(requireContext(), state)
+        val daysAdapter = DaysAdapter(requireContext(), state)
         val hoursLayoutManager =
             LinearLayoutManager(requireContext())
         binding.daysRv.apply {
-            adapter = hoursAdapter
+            adapter = daysAdapter
             layoutManager = hoursLayoutManager
         }
     }
@@ -276,9 +276,6 @@ class HomeFragment : Fragment() {
         }.toList()
         setupDaysRecyclerview(upcomingWeatherList)
     }
-
-
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getCurrentDate(): String {
