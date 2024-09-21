@@ -7,4 +7,6 @@ interface LocalDataSource {
 
     suspend fun addLocationToFavourite(weatherResponse: WeatherResponse)
     suspend fun getFavouritePlaces():List<WeatherResponse>
+    suspend fun deleteLocationToFavourite(weatherResponse: WeatherResponse)
+
 }

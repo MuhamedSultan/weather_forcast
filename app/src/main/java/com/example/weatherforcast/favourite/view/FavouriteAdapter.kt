@@ -8,7 +8,7 @@ import com.example.weatherforcast.databinding.FavouriteItemBinding
 import com.example.weatherforcast.pojo.current_weather.Main
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 
-class FavouriteAdapter(private var weatherData:List<WeatherResponse>):Adapter<FavouriteAdapter.FavouriteViewHolder>() {
+class FavouriteAdapter(private var weatherData:List<WeatherResponse>,private val favouriteClick: OnFavouriteClick):Adapter<FavouriteAdapter.FavouriteViewHolder>() {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavouriteViewHolder {
@@ -21,6 +21,12 @@ class FavouriteAdapter(private var weatherData:List<WeatherResponse>):Adapter<Fa
        val weather=weatherData[position]
         holder.placeName.text=weather.name
         holder.placeTemp.text=weather.main.temp.toString()
+        holder.deleteItem.setOnClickListener {
+            favouriteClick.onDeleteItemFavouriteClick(weather)
+        }
+        holder.favouriteItem.setOnClickListener {
+            favouriteClick.onItemFavouriteClick(weather)
+        }
     }
 
 
@@ -36,5 +42,7 @@ class FavouriteAdapter(private var weatherData:List<WeatherResponse>):Adapter<Fa
     class FavouriteViewHolder(private val binding:FavouriteItemBinding):ViewHolder(binding.root) {
         val placeName=binding.placeName
         val placeTemp=binding.placeTemp
+        val deleteItem=binding.deleteItem
+        val favouriteItem=binding.favouriteItem
     }
 }

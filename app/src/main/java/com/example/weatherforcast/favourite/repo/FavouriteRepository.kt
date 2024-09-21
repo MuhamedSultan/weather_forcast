@@ -9,5 +9,6 @@ interface FavouriteRepository {
     suspend fun getCurrentWeather(lat:Double,lon:Double):Result<WeatherResponse>
     suspend fun addLocationToFavourite(weatherResponse: WeatherResponse)
    suspend fun getFavouritePlaces():List<WeatherResponse>
+    suspend fun deleteLocationToFavourite(weatherResponse: WeatherResponse)
 
 }

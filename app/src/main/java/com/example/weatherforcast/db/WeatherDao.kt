@@ -1,6 +1,7 @@
 package com.example.weatherforcast.db
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -15,4 +16,7 @@ interface WeatherDao {
 
     @Query("SELECT * FROM weather_table")
    suspend fun getFavouritePlaces():List<WeatherResponse>
+
+   @Delete
+   suspend fun deleteLocationFromFavourite(weatherResponse: WeatherResponse)
 }

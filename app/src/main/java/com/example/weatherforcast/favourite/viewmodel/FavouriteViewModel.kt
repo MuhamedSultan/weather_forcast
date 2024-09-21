@@ -34,4 +34,9 @@ class FavouriteViewModel(private val favouriteRepository: FavouriteRepository) :
         _favouritePlaces.value=result
     }
 
+    fun deleteLocationFromFavourite(weatherResponse: WeatherResponse)=viewModelScope.launch {
+        favouriteRepository.deleteLocationToFavourite(weatherResponse)
+        getFavouritePlaces()
+    }
+
 }

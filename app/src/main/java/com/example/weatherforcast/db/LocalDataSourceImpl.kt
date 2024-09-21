@@ -11,4 +11,8 @@ class LocalDataSourceImpl(private val weatherDao: WeatherDao) :LocalDataSource {
     override suspend fun getFavouritePlaces(): List<WeatherResponse> {
        return weatherDao.getFavouritePlaces()
     }
+
+    override suspend fun deleteLocationToFavourite(weatherResponse: WeatherResponse) {
+        weatherDao.deleteLocationFromFavourite(weatherResponse)
+    }
 }

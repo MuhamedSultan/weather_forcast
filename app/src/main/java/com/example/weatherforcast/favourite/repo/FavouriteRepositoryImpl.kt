@@ -18,4 +18,8 @@ class FavouriteRepositoryImpl(private val remoteDataSource: RemoteDataSource,pri
     override  suspend fun getFavouritePlaces(): List<WeatherResponse> {
         return localDataSource.getFavouritePlaces()
     }
+
+    override suspend fun deleteLocationToFavourite(weatherResponse: WeatherResponse) {
+        localDataSource.deleteLocationToFavourite(weatherResponse)
+    }
 }

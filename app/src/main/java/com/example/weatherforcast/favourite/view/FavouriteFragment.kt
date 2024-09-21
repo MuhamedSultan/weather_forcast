@@ -1,6 +1,7 @@
 package com.example.weatherforcast.favourite.view
 
 import RemoteDataSourceImpl
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -23,7 +24,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
-class FavouriteFragment : Fragment(), OnMapReadyCallback {
+class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
 
     private lateinit var binding: FragmentFavouriteBinding
     private lateinit var mMap: GoogleMap
@@ -58,6 +59,7 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback {
             binding.recyclerView.visibility = View.GONE
             binding.floatingActionButton.visibility = View.GONE
         }
+        favouriteViewModel.getFavouritePlaces()
 
         favouriteViewModel.favouritePlaces.observe(viewLifecycleOwner) { favourites ->
             setupRecyclerview(favourites)
@@ -91,11 +93,33 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupRecyclerview(weather: List<WeatherResponse>) {
-        val favouriteAdapter = FavouriteAdapter(weather)
+        val favouriteAdapter = FavouriteAdapter(weather,this)
         binding.recyclerView.apply {
             adapter = favouriteAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
         favouriteAdapter.updateData(weather)
     }
+
+    override fun onItemFavouriteClick(weatherResponse: WeatherResponse) {
+
+    }
+
+    override fun onDeleteItemFavouriteClick(weatherResponse: WeatherResponse) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Delete Favourite")
+        builder.setMessage("Are you sure you want to delete this place from your favourites?")
+
+        builder.setPositiveButton("Yes") { dialog, _ ->
+            favouriteViewModel.deleteLocationFromFavourite(weatherResponse)
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("No") { dialog, _ ->
+            dialog.dismiss()
+        }
+        val dialog = builder.create()
+        dialog.show()
+    }
+
 }
