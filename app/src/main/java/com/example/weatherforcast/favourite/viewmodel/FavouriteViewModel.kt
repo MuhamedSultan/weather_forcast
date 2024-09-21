@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.weatherforcast.favourite.repo.FavouriteRepository
 import com.example.weatherforcast.pojo.current_weather.Main
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
+import com.example.weatherforcast.pojo.days_weather.DaysWeatherResponse
 import com.example.weatherforcast.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,6 +15,10 @@ import kotlinx.coroutines.launch
 class FavouriteViewModel(private val favouriteRepository: FavouriteRepository) : ViewModel() {
     private val _weatherResult: MutableLiveData<Result<WeatherResponse>> = MutableLiveData()
     val weatherResult: LiveData<Result<WeatherResponse>> = _weatherResult
+
+    private val _daysWeatherResult: MutableLiveData<Result<DaysWeatherResponse>> = MutableLiveData()
+    val daysWeatherResult: LiveData<Result<DaysWeatherResponse>> = _daysWeatherResult
+
 
     private val _favouritePlaces: MutableLiveData<List<WeatherResponse>>  = MutableLiveData()
     val favouritePlaces:  LiveData<List<WeatherResponse>>  = _favouritePlaces
@@ -24,6 +29,10 @@ class FavouriteViewModel(private val favouriteRepository: FavouriteRepository) :
         _weatherResult.postValue(result)
     }
 
+    fun getDaysWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
+        val result = favouriteRepository.getDaysWeather(lat, lon)
+        _daysWeatherResult.postValue(result)
+    }
     fun addLocationToFavourite(weatherResponse: WeatherResponse) = viewModelScope.launch(Dispatchers.IO) {
         favouriteRepository.addLocationToFavourite(weatherResponse)
         getFavouritePlaces()
