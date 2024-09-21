@@ -9,7 +9,7 @@ import com.example.weatherforcast.pojo.current_weather.Main
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 
 
-@Database(entities = [WeatherResponse::class], version = 2)
+@Database(entities = [WeatherResponse::class], version = 1)
 @TypeConverters(Converters::class)
 abstract class WeatherDatabase : RoomDatabase() {
     abstract fun favouriteLocationDao(): WeatherDao

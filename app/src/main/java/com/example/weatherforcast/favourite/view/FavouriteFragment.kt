@@ -1,21 +1,14 @@
 package com.example.weatherforcast.favourite.view
 
 import RemoteDataSourceImpl
-import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,32 +23,25 @@ import com.example.weatherforcast.favourite.viewmodel.FavouriteViewModelFactory
 import com.example.weatherforcast.home.view.DaysAdapter
 import com.example.weatherforcast.home.view.HoursAdapter
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
-import com.example.weatherforcast.pojo.days_weather.DaysWeatherResponse
 import com.example.weatherforcast.pojo.days_weather.State
-import com.example.weatherforcast.utils.Result
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
+class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
 
     private lateinit var binding: FragmentFavouriteBinding
     private lateinit var mMap: GoogleMap
     private lateinit var favouriteViewModel: FavouriteViewModel
-    private var  latitude :Double =0.0
-    private var longitude:Double=0.0
+    private var latitude: Double = 0.0
+    private var longitude: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,37 +65,43 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (binding.itemDetails.visibility == View.VISIBLE) {
-                    binding.itemDetails.visibility = View.GONE
-                    binding.recyclerView.visibility = View.VISIBLE
-                    binding.floatingActionButton.visibility = View.VISIBLE
-                } else {
-                    isEnabled = false
-                    requireActivity().onBackPressed()
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (binding.itemDetails.visibility == View.VISIBLE) {
+                        binding.itemDetails.visibility = View.GONE
+                        binding.recyclerView.visibility = View.VISIBLE
+                        binding.floatingActionButton.visibility = View.VISIBLE
+                    } else {
+                        isEnabled = false
+                        requireActivity().onBackPressed()
+                    }
                 }
+            })
+
+        favouriteViewModel.weatherResult.observe(viewLifecycleOwner) { result ->
+            result.data?.let { weatherResponse ->
+                favouriteViewModel.addLocationToFavourite(weatherResponse)
+                showData(weatherResponse)
+
             }
-        })
+        }
 
-
-
-        favouriteViewModel.getCurrentWeather(latitude, longitude)
-        favouriteViewModel.getDaysWeather(latitude,longitude)
-
-        val mapFragment =
-            childFragmentManager.findFragmentById(R.id.favourite_map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
 
         binding.floatingActionButton.setOnClickListener {
             binding.favouriteMap.visibility = View.VISIBLE
             binding.recyclerView.visibility = View.GONE
             binding.floatingActionButton.visibility = View.GONE
+            val mapFragment =
+                childFragmentManager.findFragmentById(R.id.favourite_map) as SupportMapFragment
+            mapFragment.getMapAsync(this)
+
         }
-        favouriteViewModel.getFavouritePlaces()
         favouriteViewModel.favouritePlaces.observe(viewLifecycleOwner) { favourites ->
             setupRecyclerview(favourites)
         }
+        favouriteViewModel.getFavouritePlaces()
 
     }
 
@@ -123,11 +115,11 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
             .load("https://openweathermap.org/img/wn/${result.weather[0].icon}@2x.png")
             .into(binding.tempImage)
         binding.dataTv.text = getCurrentDate()
-        binding.cityTv.text=result.name
+        binding.cityTv.text = result.name
 
         val windSpeed = result.wind.speed
         val humidity = result.main.humidity
-        val rain = result.rain?.`1h`?: 0.0
+        val rain = result.rain?.`1h` ?: 0.0
 
         val windSpeedText = "%.2f m/s".format(windSpeed)
         val humidityText = "%d%%".format(humidity)
@@ -151,7 +143,6 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
     }
 
 
-
     private fun showNextDaysWeather(list: List<State>) {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
@@ -171,7 +162,6 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
         }.toList()
         setupDaysRecyclerview(upcomingWeatherList)
     }
-
 
 
     private fun setupHoursRecyclerview(state: List<State>) {
@@ -206,15 +196,10 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
             mMap.addMarker(MarkerOptions().position(latLng).title("Selected Location"))
             latitude = latLng.latitude
             longitude = latLng.longitude
-            favouriteViewModel.getDaysWeather(latitude,longitude)
-            favouriteViewModel.getCurrentWeather(latitude,longitude)
-            favouriteViewModel.weatherResult.observe(viewLifecycleOwner) { result ->
-                result.data?.let { weatherResponse ->
-                    favouriteViewModel.addLocationToFavourite(weatherResponse)
-                    favouriteViewModel.getFavouritePlaces()
-                    showData(weatherResponse)
-                }
-            }
+            favouriteViewModel.getCurrentWeather(latitude, longitude)
+            favouriteViewModel.getDaysWeather(latitude, longitude)
+
+
 
             binding.favouriteMap.visibility = View.GONE
             binding.recyclerView.visibility = View.VISIBLE
@@ -223,20 +208,22 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback ,OnFavouriteClick{
     }
 
     private fun setupRecyclerview(weather: List<WeatherResponse>) {
-        val favouriteAdapter = FavouriteAdapter(weather,this)
+        val favouriteAdapter = FavouriteAdapter(weather, this)
         binding.recyclerView.apply {
             adapter = favouriteAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
-        favouriteAdapter.updateData(weather)
     }
 
     override fun onItemFavouriteClick(weatherResponse: WeatherResponse) {
-        binding.itemDetails.visibility=View.VISIBLE
-        binding.recyclerView.visibility=View.GONE
-        binding.floatingActionButton.visibility=View.GONE
-        showData(weatherResponse)
-        favouriteViewModel.daysWeatherResult.observe(viewLifecycleOwner){
+        binding.itemDetails.visibility = View.VISIBLE
+        binding.recyclerView.visibility = View.GONE
+        binding.floatingActionButton.visibility = View.GONE
+        favouriteViewModel.weatherResult.observe(viewLifecycleOwner){
+            showData(weatherResponse)
+        }
+
+        favouriteViewModel.daysWeatherResult.observe(viewLifecycleOwner) {
             showTodayWeather2(it.data!!.list)
             showNextDaysWeather(it.data.list)
         }

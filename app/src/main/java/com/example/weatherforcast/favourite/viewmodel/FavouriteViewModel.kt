@@ -40,7 +40,7 @@ class FavouriteViewModel(private val favouriteRepository: FavouriteRepository) :
 
     fun getFavouritePlaces()=viewModelScope.launch {
         val result =favouriteRepository.getFavouritePlaces()
-        _favouritePlaces.value=result
+        _favouritePlaces.postValue(result)
     }
 
     fun deleteLocationFromFavourite(weatherResponse: WeatherResponse)=viewModelScope.launch {
