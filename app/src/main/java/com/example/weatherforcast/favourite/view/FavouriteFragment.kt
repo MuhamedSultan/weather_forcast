@@ -11,6 +11,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.weatherforcast.R
@@ -30,6 +31,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -40,8 +42,7 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
     private lateinit var binding: FragmentFavouriteBinding
     private lateinit var mMap: GoogleMap
     private lateinit var favouriteViewModel: FavouriteViewModel
-    private var latitude: Double = 0.0
-    private var longitude: Double = 0.0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,15 +80,27 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
                     }
                 }
             })
+        lifecycleScope.launch {
+            favouriteViewModel.weatherResult.observe(viewLifecycleOwner) { result ->
+                result.data?.let { weatherResponse ->
+                    favouriteViewModel.addLocationToFavourite(weatherResponse)
+                    showData(weatherResponse)
 
-        favouriteViewModel.weatherResult.observe(viewLifecycleOwner) { result ->
-            result.data?.let { weatherResponse ->
-                favouriteViewModel.addLocationToFavourite(weatherResponse)
-                showData(weatherResponse)
+                }
+            }
+            favouriteViewModel.daysWeatherResult.observe(viewLifecycleOwner) { daysResult ->
+                daysResult.data?.let { daysWeatherResponse ->
+                    showTodayWeather2(daysWeatherResponse.list)
+                    showNextDaysWeather(daysWeatherResponse.list)
+                }
 
             }
-        }
 
+            favouriteViewModel.favouritePlaces.observe(viewLifecycleOwner) { favourites ->
+                setupRecyclerview(favourites)
+            }
+        }
+        favouriteViewModel.getFavouritePlaces()
 
         binding.floatingActionButton.setOnClickListener {
             binding.favouriteMap.visibility = View.VISIBLE
@@ -98,10 +111,7 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
             mapFragment.getMapAsync(this)
 
         }
-        favouriteViewModel.favouritePlaces.observe(viewLifecycleOwner) { favourites ->
-            setupRecyclerview(favourites)
-        }
-        favouriteViewModel.getFavouritePlaces()
+
 
     }
 
@@ -194,8 +204,8 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
         mMap.setOnMapClickListener { latLng ->
             mMap.clear()
             mMap.addMarker(MarkerOptions().position(latLng).title("Selected Location"))
-            latitude = latLng.latitude
-            longitude = latLng.longitude
+            val latitude = latLng.latitude
+            val longitude = latLng.longitude
             favouriteViewModel.getCurrentWeather(latitude, longitude)
             favouriteViewModel.getDaysWeather(latitude, longitude)
 
@@ -219,7 +229,11 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
         binding.itemDetails.visibility = View.VISIBLE
         binding.recyclerView.visibility = View.GONE
         binding.floatingActionButton.visibility = View.GONE
-        favouriteViewModel.weatherResult.observe(viewLifecycleOwner){
+
+        favouriteViewModel.getCurrentWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
+        favouriteViewModel.getDaysWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
+
+        favouriteViewModel.weatherResult.observe(viewLifecycleOwner) {
             showData(weatherResponse)
         }
 
