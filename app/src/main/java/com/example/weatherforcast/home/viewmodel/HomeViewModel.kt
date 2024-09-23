@@ -10,22 +10,37 @@ import com.example.weatherforcast.pojo.days_weather.DaysWeatherResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.weatherforcast.utils.Result
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 
 class HomeViewModel(private val homeRepository: HomeRepository) : ViewModel() {
 
-    private val _weatherResult: MutableLiveData<Result<WeatherResponse>> = MutableLiveData()
-    val weatherResult: LiveData<Result<WeatherResponse>> = _weatherResult
+    private val _weatherResult: MutableStateFlow<Result<WeatherResponse>> =
+        MutableStateFlow(Result.Loading())
+    val weatherResult: StateFlow<Result<WeatherResponse>> = _weatherResult
 
-    private val _daysWeatherResult: MutableLiveData<Result<DaysWeatherResponse>> = MutableLiveData()
-    val daysWeatherResult: LiveData<Result<DaysWeatherResponse>> = _daysWeatherResult
+    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse>> = MutableStateFlow(Result.Loading())
+    val daysWeatherResult: StateFlow<Result<DaysWeatherResponse>> = _daysWeatherResult
 
     fun getCurrentWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
-        val result = homeRepository.getCurrentWeather(lat, lon)
-        _weatherResult.postValue(result)
+        homeRepository.getCurrentWeather(lat, lon)
+            .catch { e ->
+                _weatherResult.value = Result.Error(e.message.toString())
+            }
+            .collect { result ->
+                _weatherResult.value = result
+            }
     }
 
     fun getDaysWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
-        val result = homeRepository.getDaysWeather(lat, lon)
-        _daysWeatherResult.postValue(result)
+        homeRepository.getDaysWeather(lat, lon)
+            .catch { e ->
+                _daysWeatherResult.value = Result.Error(e.message.toString())
+            }
+            .collect { result ->
+                _daysWeatherResult.value = result
+            }
     }
 }

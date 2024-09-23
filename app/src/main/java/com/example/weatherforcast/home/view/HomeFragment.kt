@@ -20,7 +20,10 @@ import android.widget.HorizontalScrollView
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.weatherforcast.R
@@ -38,6 +41,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -86,39 +90,60 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-        homeViewModel.weatherResult.observe(viewLifecycleOwner) { weatherResult ->
-            when (weatherResult) {
-                is Result.Success -> {
-                    weatherResult.data?.let { result ->
-                        showData(result)
-                    }
-                }
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.weatherResult.collect { weatherResult ->
+                    when (weatherResult) {
+                        is Result.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
 
-                is Result.Error -> {
-                    showError(weatherResult.message)
+                        is Result.Success -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.layoutGroup.visibility = View.VISIBLE
+                            weatherResult.data?.let { result ->
+                                showData(result)
+                            }
+                        }
+
+                        is Result.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            showError(weatherResult.message)
+                        }
+                    }
                 }
             }
         }
 
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.daysWeatherResult.collect { weatherResult ->
+                    when (weatherResult) {
+                        is Result.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
 
+                        is Result.Success -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.layoutGroup.visibility = View.VISIBLE
+                            weatherResult.data?.let { result ->
+                                showTodayWeather2(result.list)
+                                showNextDaysWeather(result.list)
 
+                            }
+                        }
 
-        homeViewModel.daysWeatherResult.observe(viewLifecycleOwner) { weatherResult ->
-            when (weatherResult) {
-                is Result.Success -> {
-                    weatherResult.data?.let { result ->
-                        showTodayWeather2(result.list)
-                        showNextDaysWeather(result.list)
+                        is Result.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            showError(weatherResult.message)
+
+                        }
                     }
-                }
-                is Result.Error -> {
-                    showError(weatherResult.message)
                 }
             }
         }
-
-
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -245,9 +270,8 @@ class HomeFragment : Fragment() {
 
 
     private fun showTodayWeather2(list: List<State>) {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())  // Input format includes date and time
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())  // Desired output format (only time)
-
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val limitedWeatherList = list.take(8).map { weather ->
             val time = timeFormat.format(inputFormat.parse(weather.dt_txt)!!)
             weather.copy(dt_txt = time)
@@ -256,10 +280,9 @@ class HomeFragment : Fragment() {
     }
 
 
-
     private fun showNextDaysWeather(list: List<State>) {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())  // Input format includes date and time
-        val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())  // Output format to get the day name
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
 
         val weatherPerDay = mutableMapOf<String, State>()
 

@@ -10,40 +10,59 @@ import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 import com.example.weatherforcast.pojo.days_weather.DaysWeatherResponse
 import com.example.weatherforcast.utils.Result
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 class FavouriteViewModel(private val favouriteRepository: FavouriteRepository) : ViewModel() {
-    private val _weatherResult: MutableLiveData<Result<WeatherResponse>> = MutableLiveData()
-    val weatherResult: LiveData<Result<WeatherResponse>> = _weatherResult
+    private val _weatherResult: MutableStateFlow<Result<WeatherResponse>> =
+        MutableStateFlow(Result.Loading())
+    val weatherResult: StateFlow<Result<WeatherResponse>> = _weatherResult
 
-    private val _daysWeatherResult: MutableLiveData<Result<DaysWeatherResponse>> = MutableLiveData()
-    val daysWeatherResult: LiveData<Result<DaysWeatherResponse>> = _daysWeatherResult
+    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse>> =
+        MutableStateFlow(Result.Loading())
+    val daysWeatherResult: StateFlow<Result<DaysWeatherResponse>> = _daysWeatherResult
 
 
-    private val _favouritePlaces: MutableLiveData<List<WeatherResponse>>  = MutableLiveData()
-    val favouritePlaces:  LiveData<List<WeatherResponse>>  = _favouritePlaces
+    private val _favouritePlaces: MutableStateFlow<List<WeatherResponse>?> = MutableStateFlow(null)
+    val favouritePlaces: StateFlow<List<WeatherResponse>?> = _favouritePlaces
 
 
     fun getCurrentWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
-        val result = favouriteRepository.getCurrentWeather(lat, lon)
-        _weatherResult.postValue(result)
+        favouriteRepository.getCurrentWeather(lat, lon)
+            .catch { e ->
+                _weatherResult.value = Result.Error(e.message.toString())
+            }
+            .collect { result ->
+                _weatherResult.value = result
+            }
     }
 
     fun getDaysWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
-        val result = favouriteRepository.getDaysWeather(lat, lon)
-        _daysWeatherResult.postValue(result)
-    }
-    fun addLocationToFavourite(weatherResponse: WeatherResponse) = viewModelScope.launch(Dispatchers.IO) {
-        favouriteRepository.addLocationToFavourite(weatherResponse)
-        getFavouritePlaces()
-    }
-
-    fun getFavouritePlaces()=viewModelScope.launch {
-        val result =favouriteRepository.getFavouritePlaces()
-        _favouritePlaces.postValue(result)
+        favouriteRepository.getDaysWeather(lat, lon)
+            .catch { e ->
+                _daysWeatherResult.value = Result.Error(e.message.toString())
+            }
+            .collect { result ->
+                _daysWeatherResult.value = result
+            }
     }
 
-    fun deleteLocationFromFavourite(weatherResponse: WeatherResponse)=viewModelScope.launch {
+    fun addLocationToFavourite(weatherResponse: WeatherResponse) =
+        viewModelScope.launch(Dispatchers.IO) {
+            favouriteRepository.addLocationToFavourite(weatherResponse)
+            getFavouritePlaces()
+        }
+
+    fun getFavouritePlaces() = viewModelScope.launch {
+        favouriteRepository.getFavouritePlaces().collect {result->
+            _favouritePlaces.value = result
+        }
+
+    }
+
+    fun deleteLocationFromFavourite(weatherResponse: WeatherResponse) = viewModelScope.launch {
         favouriteRepository.deleteLocationToFavourite(weatherResponse)
         getFavouritePlaces()
     }

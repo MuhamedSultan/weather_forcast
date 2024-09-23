@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.weatherforcast.pojo.current_weather.Main
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WeatherDao {
@@ -15,7 +16,7 @@ interface WeatherDao {
     suspend fun addLocationToFavourite(weatherResponse: WeatherResponse)
 
     @Query("SELECT * FROM weather_table")
-   suspend fun getFavouritePlaces():List<WeatherResponse>
+    fun getFavouritePlaces():Flow<List<WeatherResponse>>
 
    @Delete
    suspend fun deleteLocationFromFavourite(weatherResponse: WeatherResponse)

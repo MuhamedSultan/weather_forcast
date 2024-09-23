@@ -10,8 +10,10 @@ import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.weatherforcast.R
@@ -31,6 +33,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -81,23 +84,35 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
                 }
             })
         lifecycleScope.launch {
-            favouriteViewModel.weatherResult.observe(viewLifecycleOwner) { result ->
-                result.data?.let { weatherResponse ->
-                    favouriteViewModel.addLocationToFavourite(weatherResponse)
-                    showData(weatherResponse)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
+                favouriteViewModel.weatherResult.collect { result ->
+                    result.data?.let { weatherResponse ->
+                        favouriteViewModel.addLocationToFavourite(weatherResponse)
+                        showData(weatherResponse)
+
+                    }
                 }
             }
-            favouriteViewModel.daysWeatherResult.observe(viewLifecycleOwner) { daysResult ->
-                daysResult.data?.let { daysWeatherResponse ->
-                    showTodayWeather2(daysWeatherResponse.list)
-                    showNextDaysWeather(daysWeatherResponse.list)
+        }
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                favouriteViewModel.daysWeatherResult.collect { daysResult ->
+                    daysResult.data?.let { daysWeatherResponse ->
+                        showTodayWeather2(daysWeatherResponse.list)
+                        showNextDaysWeather(daysWeatherResponse.list)
+                    }
                 }
 
             }
+        }
 
-            favouriteViewModel.favouritePlaces.observe(viewLifecycleOwner) { favourites ->
-                setupRecyclerview(favourites)
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                favouriteViewModel.favouritePlaces.collect { favourites ->
+                    setupRecyclerview(favourites ?: emptyList())
+                }
             }
         }
         favouriteViewModel.getFavouritePlaces()
@@ -197,7 +212,6 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
         val defaultLocation = LatLng(30.0444, 31.2357)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 5f))
 
@@ -225,6 +239,7 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onItemFavouriteClick(weatherResponse: WeatherResponse) {
         binding.itemDetails.visibility = View.VISIBLE
         binding.recyclerView.visibility = View.GONE
@@ -233,40 +248,48 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
         favouriteViewModel.getCurrentWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
         favouriteViewModel.getDaysWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
 
-        favouriteViewModel.weatherResult.observe(viewLifecycleOwner) {
-            showData(weatherResponse)
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                favouriteViewModel.weatherResult.collect {
+                    showData(weatherResponse)
+                }
+            }
         }
 
-        favouriteViewModel.daysWeatherResult.observe(viewLifecycleOwner) {
-            showTodayWeather2(it.data!!.list)
-            showNextDaysWeather(it.data.list)
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                favouriteViewModel.daysWeatherResult.collect {
+                    it.data?.let { data ->
+                        showTodayWeather2(data.list)
+                        showNextDaysWeather(data.list)
+                    }
+                }
+            }
         }
-
-
     }
 
-    override fun onDeleteItemFavouriteClick(weatherResponse: WeatherResponse) {
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Delete Favourite")
-        builder.setMessage("Are you sure you want to delete this place from your favourites?")
+        override fun onDeleteItemFavouriteClick(weatherResponse: WeatherResponse) {
+            val builder = AlertDialog.Builder(requireContext())
+            builder.setTitle("Delete Favourite")
+            builder.setMessage("Are you sure you want to delete this place from your favourites?")
 
-        builder.setPositiveButton("Yes") { dialog, _ ->
-            favouriteViewModel.deleteLocationFromFavourite(weatherResponse)
-            dialog.dismiss()
+            builder.setPositiveButton("Yes") { dialog, _ ->
+                favouriteViewModel.deleteLocationFromFavourite(weatherResponse)
+                dialog.dismiss()
+            }
+
+            builder.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            val dialog = builder.create()
+            dialog.show()
         }
 
-        builder.setNegativeButton("No") { dialog, _ ->
-            dialog.dismiss()
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun getCurrentDate(): String {
+            val currentDate = LocalDate.now()
+            val formatter = DateTimeFormatter.ofPattern("dd MMMM EEEE", Locale.ENGLISH)
+            return currentDate.format(formatter)
         }
-        val dialog = builder.create()
-        dialog.show()
-    }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getCurrentDate(): String {
-        val currentDate = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("dd MMMM EEEE", Locale.ENGLISH)
-        return currentDate.format(formatter)
     }
-
-}
