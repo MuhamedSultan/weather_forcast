@@ -1,8 +1,7 @@
 <resources>
     <string name="app_name">WeatherForcast</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="home">Home</string>
+    <string name="home">الصفحة الرئيسية</string>
     <string name="favourites">Favourites</string>
     <string name="alerts">Alerts</string>
     <string name="settings">Settings</string>
@@ -39,12 +38,10 @@
         <item>m/s</item>
         <item> </item>
     </array>
-
     <array name="language_arr">
         <item>English</item>
         <item> </item>
         <item>Arabic</item>
         <item> </item>
     </array>
-    
 </resources>

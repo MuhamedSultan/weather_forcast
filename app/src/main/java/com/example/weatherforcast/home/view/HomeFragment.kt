@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.weatherforcast.R
 import com.example.weatherforcast.databinding.FragmentHomeBinding
+import com.example.weatherforcast.db.PreferencesManager
 import com.example.weatherforcast.home.repo.HomeRepository
 import com.example.weatherforcast.home.repo.HomeRepositoryImpl
 import com.example.weatherforcast.home.viewmodel.HomeViewModel
@@ -57,6 +58,7 @@ class HomeFragment : Fragment() {
     private val MY_LOCATION_PERMISSION_ID = 5005
     private val TAG = "homeTag"
     private lateinit var homeViewModel: HomeViewModel
+    private lateinit var preferencesManager: PreferencesManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +79,9 @@ class HomeFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        preferencesManager = PreferencesManager(requireContext())
 
+        binding.dataTv.text = getCurrentDate()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         locationCallback = object : LocationCallback() {
@@ -110,6 +114,7 @@ class HomeFragment : Fragment() {
                             binding.progressBar.visibility = View.GONE
                             showError(weatherResult.message)
                         }
+
                     }
                 }
             }
@@ -127,7 +132,7 @@ class HomeFragment : Fragment() {
                             binding.progressBar.visibility = View.GONE
                             binding.layoutGroup.visibility = View.VISIBLE
                             weatherResult.data?.let { result ->
-                                showTodayWeather2(result.list)
+                                showTodayWeather(result.list)
                                 showNextDaysWeather(result.list)
 
                             }
@@ -154,30 +159,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun showData(result: WeatherResponse) {
-        val tempKelvin = result.main.temp
-        val tempCelsius = tempKelvin - 273.15
-        binding.tempTv.text = "%.2f °C".format(tempCelsius)
-
-        Glide.with(requireContext())
-            .load("https://openweathermap.org/img/wn/${result.weather[0].icon}@2x.png")
-            .into(binding.tempImage)
-        binding.dataTv.text = getCurrentDate()
-
-        val windSpeed = result.wind.speed
-        val humidity = result.main.humidity
-        val rain = result.rain?.`1h` ?: 0.0
-
-        val windSpeedText = "%.2f m/s".format(windSpeed)
-        val humidityText = "%d%%".format(humidity)
-        val rainText = "%.2f mm".format(rain)
-
-        binding.windTv.text = windSpeedText
-        binding.humidityTv.text = humidityText
-        binding.rainTv.text = rainText
-
-    }
 
     private fun showError(message: String?) {
         Snackbar.make(requireView(), message.toString(), Snackbar.LENGTH_SHORT).show()
@@ -217,8 +198,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun getAddressFromLocation(location: Location) {
-        val geocoder = Geocoder(requireContext(), Locale.getDefault())
         try {
+            val geocoder = Geocoder(requireContext(), Locale.getDefault())
             val addresses: MutableList<Address>? =
                 geocoder.getFromLocation(location.latitude, location.longitude, 1)
 
@@ -255,27 +236,48 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showTodayWeather(list: List<State>) {
-        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val todayWeather = list.filter { it.dt_txt.startsWith(currentDate) }
-        println("Today's Weather (every 3 hours):")
-        todayWeather.forEach { weather ->
-            val time = inputFormat.parse(weather.dt_txt)?.let { timeFormat.format(it) }
-            println("Time: $time, Temp: ${weather.main.temp}°K, ${weather.weather[0].description}")
-            setupHoursRecyclerview(todayWeather)
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun showData(result: WeatherResponse) {
+        val tempUnit = preferencesManager.getSelectedOption(PreferencesManager.KEY_TEMP_UNIT, "K")
+        val windSpeedUnit =
+            preferencesManager.getSelectedOption(PreferencesManager.KEY_WIND_SPEED_UNIT, "Km/h")
+
+        val tempValue = convertTemperature(result.main.temp, tempUnit ?: "Celsius")
+
+        val windSpeedValue = convertWindSpeed(result.wind.speed, windSpeedUnit ?: "Km/h")
+
+
+        val tempUnitSymbol = when (tempUnit) {
+            "Celsius" -> "°C"
+            "Fahrenheit" -> "°F"
+            "K" -> "°K"
+            else -> "°K"
         }
+
+        binding.tempTv.text = String.format("%.2f %s", tempValue, tempUnitSymbol)
+        binding.windTv.text = String.format("%.2f %s", windSpeedValue, windSpeedUnit)
+        binding.humidityTv.text = "${result.main.humidity}%"
+        binding.rainTv.text = "${String.format("%.1f", result.rain?.`1h` ?: 0.0)} mm"
+        Glide.with(requireContext())
+            .load("https://openweathermap.org/img/wn/${result.weather[0].icon}@2x.png")
+            .into(binding.tempImage)
     }
 
 
-    private fun showTodayWeather2(list: List<State>) {
+    private fun showTodayWeather(list: List<State>) {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+        val temperatureUnit =
+            preferencesManager.getSelectedOption(PreferencesManager.KEY_TEMP_UNIT, "K") ?: "K"
+
         val limitedWeatherList = list.take(8).map { weather ->
             val time = timeFormat.format(inputFormat.parse(weather.dt_txt)!!)
-            weather.copy(dt_txt = time)
+            val tempKelvin = weather.main.temp
+            val convertedTemperature = convertTemperature(tempKelvin, temperatureUnit)
+            weather.copy(dt_txt = time, main = weather.main.copy(temp = convertedTemperature))
         }
+
         setupHoursRecyclerview(limitedWeatherList)
     }
 
@@ -283,6 +285,8 @@ class HomeFragment : Fragment() {
     private fun showNextDaysWeather(list: List<State>) {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
+        val temperatureUnit =
+            preferencesManager.getSelectedOption(PreferencesManager.KEY_TEMP_UNIT, "K") ?: "K"
 
         val weatherPerDay = mutableMapOf<String, State>()
 
@@ -291,14 +295,21 @@ class HomeFragment : Fragment() {
             val dayName = dayFormat.format(date)
 
             if (!weatherPerDay.containsKey(dayName)) {
-                weatherPerDay[dayName] = weather.copy(dt_txt = dayName)
+                val tempKelvin = weather.main.temp
+                val convertedTemperature = convertTemperature(tempKelvin, temperatureUnit)
+
+                weatherPerDay[dayName] = weather.copy(
+                    dt_txt = dayName,
+                    main = weather.main.copy(temp = convertedTemperature)
+                )
             }
         }
-        val upcomingWeatherList = weatherPerDay.map { (dayName, state) ->
-            state.copy(dt_txt = dayName)
-        }.toList()
+
+        val upcomingWeatherList = weatherPerDay.map { it.value }.toList()
+
         setupDaysRecyclerview(upcomingWeatherList)
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getCurrentDate(): String {
@@ -306,6 +317,23 @@ class HomeFragment : Fragment() {
         val formatter = DateTimeFormatter.ofPattern("dd MMMM EEEE", Locale.ENGLISH)
         return currentDate.format(formatter)
     }
+
+    private fun convertTemperature(tempKelvin: Double, unit: String): Double {
+        return when (unit) {
+            "Celsius" -> tempKelvin - 273.15
+            "Fahrenheit" -> (tempKelvin - 273.15) * 9 / 5 + 32
+            else -> tempKelvin
+        }
+    }
+
+    private fun convertWindSpeed(windSpeed: Double, unit: String): Double {
+        return when (unit) {
+            "km/h" -> windSpeed
+            "m/s" -> windSpeed * 3.6
+            else -> windSpeed
+        }
+    }
+
 
 }
 
