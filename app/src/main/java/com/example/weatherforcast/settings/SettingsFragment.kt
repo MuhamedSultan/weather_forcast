@@ -6,9 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
 import com.example.weatherforcast.R
 import com.example.weatherforcast.databinding.FragmentSettingsBinding
 import com.example.weatherforcast.db.PreferencesManager
@@ -24,92 +26,90 @@ class SettingsFragment : Fragment() {
     ): View {
         binding = FragmentSettingsBinding.inflate(inflater, container, false)
         preferencesManager = PreferencesManager(requireContext())
-        setupSpinners()
-        setupSpinnerListeners()
+
+        initializeSpinners()
+        setSpinnerListeners()
+
         return binding.root
     }
 
-    private fun setupSpinnerListeners() {
-        binding.languageSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedLanguage = parent.getItemAtPosition(position).toString()
-                val languageCode = if (selectedLanguage == "English") "en" else "ar"
+    private fun initializeSpinners() {
+        setupSpinner(binding.tempSpinner, R.array.temperature_unit, preferencesManager.getTemperatureUnit()?:"Celsius")
+        setupSpinner(binding.windSpeedSpinner, R.array.wind_speed, preferencesManager.getWindSpeedUnit()?:"Km/h")
+        setupSpinner(binding.languageSpinner, R.array.language_arr, getLanguageDisplayName(preferencesManager.getSelectedOption(PreferencesManager.KEY_LANGUAGE, "en")))
+        setupSpinner(binding.locationSpinner, R.array.location, preferencesManager.getSavedLocation()?:"Gps")
+    }
 
-                val currentLanguage = preferencesManager.getSelectedOption(PreferencesManager.KEY_LANGUAGE, "en")
-                if (currentLanguage != languageCode) {
-                    preferencesManager.saveSelectedOption(PreferencesManager.KEY_LANGUAGE, languageCode)
-                    updateLanguage(languageCode)
-                }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-
-        binding.tempSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedTemperatureUnit = parent.getItemAtPosition(position).toString()
-                preferencesManager.saveTemperatureUnit(selectedTemperatureUnit)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-
-        binding.windSpeedSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedWindSpeed = parent.getItemAtPosition(position).toString()
-                preferencesManager.saveWindSpeedUnit(selectedWindSpeed)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
+    private fun setupSpinner(spinner: Spinner, arrayResId: Int, selectedValue: String) {
+        val items = resources.getStringArray(arrayResId)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, items)
+        spinner.adapter = adapter
+        val selectedIndex = items.indexOf(selectedValue)
+        if (selectedIndex >= 0) {
+            spinner.setSelection(selectedIndex)
         }
     }
 
-    private fun setupSpinners() {
-        // Temperature Spinner
-        val tempUnit = preferencesManager.getTemperatureUnit()
-        val temperatureUnits = resources.getStringArray(R.array.temperature_unit)
-        val tempAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, temperatureUnits)
-        binding.tempSpinner.adapter = tempAdapter
-
-        val tempIndex = temperatureUnits.indexOf(tempUnit)
-        if (tempIndex >= 0) {
-            binding.tempSpinner.setSelection(tempIndex)
+    private fun setSpinnerListeners() {
+        binding.languageSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedLanguage ->
+            val languageCode = getLanguageCode(selectedLanguage)
+            if (preferencesManager.getSelectedOption(PreferencesManager.KEY_LANGUAGE, "en") != languageCode) {
+                preferencesManager.saveSelectedOption(PreferencesManager.KEY_LANGUAGE, languageCode)
+                updateLanguage(languageCode)
+            }
         }
 
-        // Wind Speed Spinner
-        val windSpeedUnit = preferencesManager.getWindSpeedUnit()
-        val windSpeedUnits = resources.getStringArray(R.array.wind_speed)
-        val windSpeedAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, windSpeedUnits)
-        binding.windSpeedSpinner.adapter = windSpeedAdapter
+        binding.locationSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedLocation ->
+            preferencesManager.saveLocationOption(selectedLocation)
 
-        val windSpeedIndex = windSpeedUnits.indexOf(windSpeedUnit)
-        if (windSpeedIndex >= 0) {
-            binding.windSpeedSpinner.setSelection(windSpeedIndex)
+            if (selectedLocation != "Map") {
+                preferencesManager.saveMapSelected(false)
+            }
+
+            if (selectedLocation == "Map" && !preferencesManager.isMapSelected()) {
+                preferencesManager.saveMapSelected(true)
+                Navigation.findNavController(requireView()).navigate(R.id.action_settingsFragment_to_mapsFragment)
+            }
         }
 
-        val language = preferencesManager.getSelectedOption(PreferencesManager.KEY_LANGUAGE, "en") ?: "en"
-        val languages = resources.getStringArray(R.array.language_arr)
-        val languageAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, languages)
-        binding.languageSpinner.adapter = languageAdapter
 
-        val languageIndex = languages.indexOf(if (language == "en") "English" else "Arabic")
-        if (languageIndex >= 0) {
-            binding.languageSpinner.setSelection(languageIndex)
+        binding.tempSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedTemperatureUnit ->
+            preferencesManager.saveTemperatureUnit(selectedTemperatureUnit)
+        }
+
+        binding.windSpeedSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedWindSpeed ->
+            preferencesManager.saveWindSpeedUnit(selectedWindSpeed)
+        }
+    }
+
+    private fun createOnItemSelectedListener(action: (String) -> Unit): AdapterView.OnItemSelectedListener {
+        return object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedValue = parent.getItemAtPosition(position).toString()
+                action(selectedValue)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
     private fun updateLanguage(language: String) {
-        changeAppLanguage(language)
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.forLanguageTags(language)
-        )
+        Locale.setDefault(Locale(language))
+        val config = resources.configuration
+        config.setLocale(Locale(language))
+        resources.updateConfiguration(config, resources.displayMetrics)
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language))
     }
 
-    private fun changeAppLanguage(language: String) {
-        val locale = Locale(language)
-        Locale.setDefault(locale)
-        val config = resources.configuration
-        config.setLocale(locale)
-        resources.updateConfiguration(config, resources.displayMetrics)
+    private fun getLanguageCode(displayName: String): String {
+        return when (displayName) {
+            "English" -> "en"
+            "Arabic" -> "ar"
+            else -> "en"
+        }
+    }
+
+    private fun getLanguageDisplayName(languageCode: String?): String {
+        return if (languageCode == "ar") "Arabic" else "English"
     }
 }

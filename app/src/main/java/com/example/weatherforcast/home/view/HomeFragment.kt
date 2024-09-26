@@ -81,6 +81,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         preferencesManager = PreferencesManager(requireContext())
 
+
         binding.dataTv.text = getCurrentDate()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
@@ -88,9 +89,19 @@ class HomeFragment : Fragment() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.lastLocation?.let { location ->
                     Log.i(TAG, "Location: ${location.latitude}, ${location.longitude}")
-                    homeViewModel.getCurrentWeather(location.latitude, location.longitude)
-                    homeViewModel.getDaysWeather(location.latitude, location.longitude)
-                    getAddressFromLocation(location)
+                    if (preferencesManager.getSavedLocation() == "Gps") {
+                        homeViewModel.getCurrentWeather(location.latitude, location.longitude)
+                        homeViewModel.getDaysWeather(location.latitude, location.longitude)
+                        getAddressFromLocation(location.latitude, location.longitude)
+                    } else {
+                        val lat =
+                            preferencesManager.getSavedLatitude()?.toDouble() ?: location.latitude
+                        val lon =
+                            preferencesManager.getSavedLongitude()?.toDouble() ?: location.longitude
+                        homeViewModel.getCurrentWeather(lat, lon)
+                        homeViewModel.getDaysWeather(lat, lat)
+                        getAddressFromLocation(lat, lon)
+                    }
                 }
             }
         }
@@ -197,15 +208,18 @@ class HomeFragment : Fragment() {
         )
     }
 
-    private fun getAddressFromLocation(location: Location) {
+    private fun getAddressFromLocation(latitude: Double, longitude: Double) {
+        if (!isAdded) {
+            return
+        }
         try {
             val geocoder = Geocoder(requireContext(), Locale.getDefault())
             val addresses: MutableList<Address>? =
-                geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                geocoder.getFromLocation(latitude, longitude, 1)
 
             if (addresses!!.isNotEmpty()) {
                 val address: Address = addresses[0]
-                val addressString: String? = address.adminArea
+                val addressString: String = address.adminArea ?: "Unknown Area Name"
                 binding.cityTv.text = addressString
                 Log.i(TAG, "Address: $addressString")
             } else {

@@ -41,13 +41,9 @@
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/itemDetails"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -57,14 +53,15 @@
 
             <TextView
                 android:id="@+id/cityTv"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="32dp"
                 android:layout_marginTop="16dp"
-                android:text="Damietta"
+                android:layout_marginEnd="32dp"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="22sp"
                 android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -74,8 +71,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="TextView"
+                android:layout_marginBottom="32dp"
                 android:textColor="?attr/colorPrimary"
+                app:layout_constraintBottom_toTopOf="@+id/cardView"
+                app:layout_constraintEnd_toEndOf="@+id/cityTv"
                 app:layout_constraintStart_toStartOf="@+id/cityTv"
                 app:layout_constraintTop_toBottomOf="@+id/cityTv" />
 
@@ -104,7 +103,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:gravity="center"
-                        android:text="14 C"
                         android:textColor="?attr/colorPrimary"
                         android:textSize="26sp"
                         android:textStyle="bold"
@@ -119,7 +117,6 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="8dp"
-                        android:clipToOutline="false"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -151,17 +148,19 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="32dp"
                         android:layout_marginTop="8dp"
-                        android:layout_marginEnd="16dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:gravity="center"
-                        android:text="TextView"
                         android:textColor="?attr/colorOnPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold"
+                        app:layout_constraintBottom_toTopOf="@+id/textView"
                         app:layout_constraintEnd_toStartOf="@+id/humidityTv"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
                     <TextView
+                        android:id="@+id/textView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
@@ -206,9 +205,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
+                        android:layout_marginEnd="8dp"
                         android:gravity="center"
-                        android:text="TextView"
                         android:textColor="?attr/colorOnPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold"
@@ -224,7 +222,6 @@
                         android:layout_marginStart="16dp"
                         android:layout_marginEnd="32dp"
                         android:gravity="center"
-                        android:text="TextView"
                         android:textColor="?attr/colorOnPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold"
@@ -287,5 +284,4 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
