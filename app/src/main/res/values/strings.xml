@@ -14,6 +14,12 @@
     <string name="wind_speed">Wind Speed</string>
     <string name="temperature_unit">Temperature Unit</string>
     <string name="language">Language</string>
+    <string name="time">time</string>
+    <string name="alert_type">Alert type</string>
+    <string name="time_in">In</string>
+    <string name="alarm_alert">Alarm Alert!</string>
+    <string name="click_to_see_weather_today">Open The App to See Weather Today</string>
+    <string name="dismiss">Dismiss</string>
     <array name="notifications">
         <item>Enable</item>
         <item>Disable</item>
@@ -26,25 +32,25 @@
 
     <array name="temperature_unit">
         <item>Kelvin</item>
-        <item> </item>
+        <item></item>
         <item>Celsius</item>
-        <item> </item>
+        <item></item>
         <item>Fahrenheit</item>
-        <item> </item>
+        <item></item>
     </array>
 
     <array name="wind_speed">
         <item>km/h</item>
-        <item> </item>
+        <item></item>
         <item>m/s</item>
-        <item> </item>
+        <item></item>
     </array>
 
     <array name="language_arr">
         <item>English</item>
-        <item> </item>
+        <item></item>
         <item>Arabic</item>
-        <item> </item>
+        <item></item>
     </array>
-    
+
 </resources>

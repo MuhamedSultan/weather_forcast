@@ -5,14 +5,14 @@ import androidx.room.Database
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.weatherforcast.pojo.current_weather.Main
+import com.example.weatherforcast.pojo.alerts.Alerts
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 
 
-@Database(entities = [WeatherResponse::class], version = 1)
+@Database(entities = [WeatherResponse::class, Alerts::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class WeatherDatabase : RoomDatabase() {
-    abstract fun favouriteLocationDao(): WeatherDao
+    abstract fun weatherDao(): WeatherDao
 
     companion object {
         @Volatile

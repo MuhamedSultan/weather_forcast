@@ -103,6 +103,7 @@ dependencies {
     implementation("com.airbnb.android:lottie:6.0.0")
 
     implementation("com.google.android.gms:play-services-location:21.1.0")
+    implementation("androidx.core:core-ktx:1.6.0")
 
 
 }
