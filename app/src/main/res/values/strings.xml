@@ -20,6 +20,7 @@
     <string name="alarm_alert">Alarm Alert!</string>
     <string name="click_to_see_weather_today">Open The App to See Weather Today</string>
     <string name="dismiss">Dismiss</string>
+    <string name="search">Search</string>
     <array name="notifications">
         <item>Enable</item>
         <item>Disable</item>
