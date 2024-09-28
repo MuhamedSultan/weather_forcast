@@ -26,6 +26,7 @@
     <string name="visibility">Visibility</string>
     <string name="_24_hour_forecast">24-hour forecast</string>
     <string name="_5_days_forecast">5-days forecast</string>
+    <string name="discover_new_places_and_add_them_to_favourite">Discover new places and add them to favourite</string>
     <array name="notifications">
         <item>Enable</item>
         <item>Disable</item>

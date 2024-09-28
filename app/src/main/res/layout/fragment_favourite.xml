@@ -284,4 +284,33 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <ImageView
+        android:id="@+id/location_ic"
+        android:layout_width="158dp"
+        android:layout_height="122dp"
+        android:layout_marginTop="304dp"
+        android:visibility="gone"
+        android:src="@drawable/location_ic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/des"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/discover_new_places_and_add_them_to_favourite"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="18sp"
+        android:padding="8dp"
+        android:gravity="center"
+        android:layout_marginHorizontal="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/location_ic"
+        app:layout_constraintVertical_bias="0.060000002" />
 </androidx.constraintlayout.widget.ConstraintLayout>

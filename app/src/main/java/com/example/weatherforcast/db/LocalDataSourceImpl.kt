@@ -46,4 +46,8 @@ class LocalDataSourceImpl(private val weatherDao: WeatherDao) :LocalDataSource {
     override suspend fun deleteAlert(alert: Alerts) {
         weatherDao.deleteAlert(alert)
     }
+
+   override suspend fun updateWeather(weatherResponse: WeatherResponse){
+        weatherDao.updateWeather(weatherResponse)
+    }
 }

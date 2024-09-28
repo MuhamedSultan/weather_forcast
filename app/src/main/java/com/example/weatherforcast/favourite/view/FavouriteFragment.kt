@@ -29,12 +29,14 @@ import com.example.weatherforcast.home.view.DaysAdapter
 import com.example.weatherforcast.home.view.HoursAdapter
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 import com.example.weatherforcast.pojo.days_weather.State
+import com.example.weatherforcast.utils.ConnectivityHelper
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -124,13 +126,20 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
         favouriteViewModel.getFavouritePlaces()
 
         binding.floatingActionButton.setOnClickListener {
-            binding.favouriteMap.visibility = View.VISIBLE
-            binding.recyclerView.visibility = View.GONE
-            binding.floatingActionButton.visibility = View.GONE
-            val mapFragment =
-                childFragmentManager.findFragmentById(R.id.favourite_map) as SupportMapFragment
-            mapFragment.getMapAsync(this)
+            if (ConnectivityHelper.checkRealInternetAvailability(requireContext())) {
+                binding.favouriteMap.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.GONE
+                binding.floatingActionButton.visibility = View.GONE
+                binding.locationIc.visibility=View.GONE
+                binding.des.visibility=View.GONE
+                val mapFragment =
+                    childFragmentManager.findFragmentById(R.id.favourite_map) as SupportMapFragment
+                mapFragment.getMapAsync(this)
+            } else {
+                Snackbar.make(requireView(), "Please Check Your Connection", Snackbar.LENGTH_SHORT)
+                    .show()
 
+            }
         }
 
 
@@ -260,34 +269,49 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
             adapter = favouriteAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
+        if (weather.isEmpty()){
+            binding.locationIc.visibility=View.VISIBLE
+            binding.des.visibility=View.VISIBLE
+        }else{
+            binding.locationIc.visibility=View.GONE
+            binding.des.visibility=View.GONE
+        }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onItemFavouriteClick(weatherResponse: WeatherResponse) {
-        binding.itemDetails.visibility = View.VISIBLE
-        binding.recyclerView.visibility = View.GONE
-        binding.floatingActionButton.visibility = View.GONE
+        if (ConnectivityHelper.checkRealInternetAvailability(requireContext())) {
+            binding.itemDetails.visibility = View.VISIBLE
+            binding.recyclerView.visibility = View.GONE
+            binding.floatingActionButton.visibility = View.GONE
 
-        favouriteViewModel.getCurrentWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
-        favouriteViewModel.getDaysWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
+            favouriteViewModel.getCurrentWeather(
+                weatherResponse.coord.lat,
+                weatherResponse.coord.lon
+            )
+            favouriteViewModel.getDaysWeather(weatherResponse.coord.lat, weatherResponse.coord.lon)
 
-        lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                favouriteViewModel.weatherResult.collect {
-                    showData(weatherResponse)
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                favouriteViewModel.daysWeatherResult.collect {
-                    it.data?.let { data ->
-                        showTodayWeather(data.list)
-                        showNextDaysWeather(data.list)
+            lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    favouriteViewModel.weatherResult.collect {
+                        showData(weatherResponse)
                     }
                 }
             }
+
+            lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    favouriteViewModel.daysWeatherResult.collect {
+                        it.data?.let { data ->
+                            showTodayWeather(data.list)
+                            showNextDaysWeather(data.list)
+                        }
+                    }
+                }
+            }
+        }else{
+           Snackbar.make(requireView(),"Please Check Your Connection",Snackbar.LENGTH_SHORT).show()
         }
     }
 

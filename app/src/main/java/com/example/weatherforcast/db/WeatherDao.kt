@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.weatherforcast.pojo.alerts.Alerts
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
 import com.example.weatherforcast.pojo.days_weather.DaysWeatherResponse
@@ -29,11 +30,15 @@ interface WeatherDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addLocationToFavourite(weatherResponse: WeatherResponse)
 
-    @Query("SELECT * FROM weather_table")
+    @Query("SELECT * FROM weather_table Where isHome=0")
     fun getFavouritePlaces(): Flow<List<WeatherResponse>>
 
     @Delete
     suspend fun deleteLocationFromFavourite(weatherResponse: WeatherResponse)
+
+
+    @Update
+    suspend fun updateWeather(weatherResponse: WeatherResponse)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addAlert(alert: Alerts)

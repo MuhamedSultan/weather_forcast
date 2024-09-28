@@ -23,5 +23,6 @@ data class WeatherResponse(
     val timezone: Int,
     val visibility: Int,
     val weather: List<Weather>,
-    val wind: Wind
+    val wind: Wind,
+    var isHome:Boolean=false
 )

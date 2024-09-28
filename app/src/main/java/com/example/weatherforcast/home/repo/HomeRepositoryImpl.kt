@@ -26,10 +26,12 @@ class HomeRepositoryImpl(
             remoteResult.collect { result ->
                 if (result is Result.Success) {
                     localDataSource.addCurrentWeather(result.data!!)
-                }
+                    result.data.isHome = true
+                    localDataSource.updateWeather(result.data)                }
             }
         } else {
             emitAll(localDataSource.getCurrentWeather().map { Result.Success(it) })
+
         }
     }
 

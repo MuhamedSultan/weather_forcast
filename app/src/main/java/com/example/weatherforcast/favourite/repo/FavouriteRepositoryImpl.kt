@@ -17,7 +17,8 @@ class FavouriteRepositoryImpl(private val remoteDataSource: RemoteDataSource,pri
     }
 
     override suspend fun addLocationToFavourite(weatherResponse: WeatherResponse) {
-      localDataSource.addLocationToFavourite(weatherResponse)
+        weatherResponse.isHome = false
+        localDataSource.addLocationToFavourite(weatherResponse)
     }
 
     override  suspend fun getFavouritePlaces(): Flow<List<WeatherResponse>> {
