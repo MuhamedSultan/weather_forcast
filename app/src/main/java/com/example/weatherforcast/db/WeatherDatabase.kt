@@ -7,9 +7,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.weatherforcast.pojo.alerts.Alerts
 import com.example.weatherforcast.pojo.current_weather.WeatherResponse
+import com.example.weatherforcast.pojo.days_weather.DaysWeatherResponse
 
 
-@Database(entities = [WeatherResponse::class, Alerts::class], version = 2)
+@Database(entities = [WeatherResponse::class,DaysWeatherResponse::class, Alerts::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class WeatherDatabase : RoomDatabase() {
     abstract fun weatherDao(): WeatherDao

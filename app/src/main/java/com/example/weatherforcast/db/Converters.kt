@@ -10,6 +10,8 @@ import com.example.weatherforcast.pojo.current_weather.Rain
 import com.example.weatherforcast.pojo.current_weather.Sys
 import com.example.weatherforcast.pojo.current_weather.Weather
 import com.example.weatherforcast.pojo.current_weather.Wind
+import com.example.weatherforcast.pojo.days_weather.City
+import com.example.weatherforcast.pojo.days_weather.State
 
 class Converters {
 
@@ -91,4 +93,29 @@ class Converters {
         val type = object : TypeToken<Wind>() {}.type
         return gson.fromJson(windString, type)
     }
+
+    @TypeConverter
+    fun fromCity(city: City): String {
+        return gson.toJson(city)
+    }
+
+    @TypeConverter
+    fun toCity(cityString: String?): City {
+        val type = object : TypeToken<City>() {}.type
+        return gson.fromJson(cityString, type)
+    }
+
+    @TypeConverter
+    fun fromStateList(list: List<State>?): String {
+        return gson.toJson(list)
+    }
+
+    @TypeConverter
+    fun toStateList(stateString: String?): List<State> {
+        val type = object : TypeToken<List<State>>() {}.type
+        return gson.fromJson(stateString, type)
+    }
+
+
+
 }

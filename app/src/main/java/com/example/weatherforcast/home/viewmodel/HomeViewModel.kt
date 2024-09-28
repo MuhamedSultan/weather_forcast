@@ -21,7 +21,8 @@ class HomeViewModel(private val homeRepository: HomeRepository) : ViewModel() {
         MutableStateFlow(Result.Loading())
     val weatherResult: StateFlow<Result<WeatherResponse>> = _weatherResult
 
-    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse>> = MutableStateFlow(Result.Loading())
+    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse>> =
+        MutableStateFlow(Result.Loading())
     val daysWeatherResult: StateFlow<Result<DaysWeatherResponse>> = _daysWeatherResult
 
     fun getCurrentWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
@@ -42,5 +43,13 @@ class HomeViewModel(private val homeRepository: HomeRepository) : ViewModel() {
             .collect { result ->
                 _daysWeatherResult.value = result
             }
+    }
+
+    fun addCurrentWeather(weatherResponse: WeatherResponse) = viewModelScope.launch {
+        homeRepository.addCurrentWeather(weatherResponse)
+    }
+
+    fun addDaysCurrentWeather(daysWeatherResponse: DaysWeatherResponse) = viewModelScope.launch {
+        homeRepository.addDaysWeather(daysWeatherResponse)
     }
 }

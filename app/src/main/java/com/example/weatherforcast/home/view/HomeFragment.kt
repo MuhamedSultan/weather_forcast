@@ -29,7 +29,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.weatherforcast.R
 import com.example.weatherforcast.databinding.FragmentHomeBinding
+import com.example.weatherforcast.db.LocalDataSourceImpl
 import com.example.weatherforcast.db.PreferencesManager
+import com.example.weatherforcast.db.WeatherDatabase
 import com.example.weatherforcast.home.repo.HomeRepository
 import com.example.weatherforcast.home.repo.HomeRepositoryImpl
 import com.example.weatherforcast.home.viewmodel.HomeViewModel
@@ -63,8 +65,10 @@ class HomeFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val dao = WeatherDatabase.getInstance(requireContext())?.weatherDao()
+        val localDataSource = LocalDataSourceImpl(dao!!)
         val remoteDataSource = RemoteDataSourceImpl()
-        val repository = HomeRepositoryImpl(remoteDataSource)
+        val repository = HomeRepositoryImpl(remoteDataSource, localDataSource,requireContext())
         val factory = HomeViewModelFactory(repository)
         homeViewModel = ViewModelProvider(this, factory)[HomeViewModel::class.java]
     }
@@ -121,6 +125,7 @@ class HomeFragment : Fragment() {
                             binding.layoutGroup.visibility = View.VISIBLE
                             weatherResult.data?.let { result ->
                                 showData(result)
+                                homeViewModel.addCurrentWeather(result)
                             }
                         }
 
@@ -148,6 +153,7 @@ class HomeFragment : Fragment() {
                             weatherResult.data?.let { result ->
                                 showTodayWeather(result.list)
                                 showNextDaysWeather(result.list)
+                                homeViewModel.addDaysCurrentWeather(result)
 
                             }
                         }
@@ -272,9 +278,13 @@ class HomeFragment : Fragment() {
         }
 
         binding.tempTv.text = String.format("%.2f %s", tempValue, tempUnitSymbol)
+        binding.tempDesc.text = result.weather[0].description
         binding.windTv.text = String.format("%.2f %s", windSpeedValue, windSpeedUnit)
         binding.humidityTv.text = "${result.main.humidity}%"
         binding.rainTv.text = "${String.format("%.1f", result.rain?.`1h` ?: 0.0)} mm"
+        binding.cloudTv.text = "${result.clouds.all} %"
+        binding.pressureTv.text = "${result.main.pressure} hpa"
+        binding.visibilityTv.text = "${result.visibility} m"
         Glide.with(requireContext())
             .load("https://openweathermap.org/img/wn/${result.weather[0].icon}@2x.png")
             .into(binding.tempImage)

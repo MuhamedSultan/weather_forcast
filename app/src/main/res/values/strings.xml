@@ -21,6 +21,11 @@
     <string name="click_to_see_weather_today">Open The App to See Weather Today</string>
     <string name="dismiss">Dismiss</string>
     <string name="search">Search</string>
+    <string name="clouds">Clouds</string>
+    <string name="pressure">Pressure</string>
+    <string name="visibility">Visibility</string>
+    <string name="_24_hour_forecast">24-hour forecast</string>
+    <string name="_5_days_forecast">5-days forecast</string>
     <array name="notifications">
         <item>Enable</item>
         <item>Disable</item>
