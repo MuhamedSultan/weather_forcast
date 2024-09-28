@@ -16,13 +16,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 class FavouriteViewModel(private val favouriteRepository: FavouriteRepository) : ViewModel() {
-    private val _weatherResult: MutableStateFlow<Result<WeatherResponse>> =
+    private val _weatherResult: MutableStateFlow<Result<WeatherResponse?>> =
         MutableStateFlow(Result.Loading())
-    val weatherResult: StateFlow<Result<WeatherResponse>> = _weatherResult
+    val weatherResult: StateFlow<Result<WeatherResponse?>> = _weatherResult
 
-    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse>> =
+    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse?>> =
         MutableStateFlow(Result.Loading())
-    val daysWeatherResult: StateFlow<Result<DaysWeatherResponse>> = _daysWeatherResult
+    val daysWeatherResult: StateFlow<Result<DaysWeatherResponse?>> = _daysWeatherResult
 
 
     private val _favouritePlaces: MutableStateFlow<List<WeatherResponse>?> = MutableStateFlow(null)

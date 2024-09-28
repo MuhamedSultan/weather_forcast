@@ -24,9 +24,9 @@ class DaysAdapter(private val context: Context, private val state: List<State>) 
     override fun onBindViewHolder(holder: HoursViewHolder, position: Int) {
         val state = state[position]
         holder.hoursTv.text = state.dt_txt
-        holder.tempTv.text = String.format("%.2f", state.main.temp)
+        holder.tempTv.text = String.format("%.2f", state.main?.temp)
         Glide.with(context)
-            .load("https://openweathermap.org/img/wn/${state.weather[0].icon}@2x.png")
+            .load("https://openweathermap.org/img/wn/${state.weather?.get(0)?.icon}@2x.png")
             .into(holder.weatherImage)
     }
 

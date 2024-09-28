@@ -8,6 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface RemoteDataSource {
 
-    suspend fun getCurrentWeather(lat:Double,lon:Double) : Flow<Result<WeatherResponse>>
-    suspend fun getDaysWeather(lat:Double,lon:Double) :Flow<Result<DaysWeatherResponse>>
+    suspend fun getCurrentWeather(lat:Double,lon:Double) : Flow<Result<WeatherResponse?>>
+    suspend fun getDaysWeather(lat:Double,lon:Double) :Flow<Result<DaysWeatherResponse?>>
 }

@@ -3,15 +3,13 @@ package com.example.weatherforcast.pojo.current_weather
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity("main_table")
 data class Main(
-    @PrimaryKey
-    val feels_like: Double,
-    val grnd_level: Int,
+    val feels_like: Double?=null,
+    val grnd_level: Int?=null,
     val humidity: Int,
     val pressure: Int,
-    val sea_level: Int,
+    val sea_level: Int?=null,
     val temp: Double,
-    val temp_max: Double,
-    val temp_min: Double
+    val temp_max: Double?=null,
+    val temp_min: Double?=null
 )

@@ -11,7 +11,7 @@ class RemoteDataSourceImpl : RemoteDataSource {
     override suspend fun getCurrentWeather(
         lat: Double,
         lon: Double
-    ): Flow<Result<WeatherResponse>> =
+    ): Flow<Result<WeatherResponse?>> =
         flow {
             try {
 
@@ -36,7 +36,7 @@ class RemoteDataSourceImpl : RemoteDataSource {
     override suspend fun getDaysWeather(
         lat: Double,
         lon: Double
-    ): Flow<Result<DaysWeatherResponse>> =
+    ): Flow<Result<DaysWeatherResponse?>> =
         flow {
             try {
                 emit(Result.Loading())

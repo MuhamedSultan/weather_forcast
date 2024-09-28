@@ -17,13 +17,13 @@ import kotlinx.coroutines.flow.catch
 
 class HomeViewModel(private val homeRepository: HomeRepository) : ViewModel() {
 
-    private val _weatherResult: MutableStateFlow<Result<WeatherResponse>> =
+    private val _weatherResult: MutableStateFlow<Result<WeatherResponse?>> =
         MutableStateFlow(Result.Loading())
-    val weatherResult: StateFlow<Result<WeatherResponse>> = _weatherResult
+    val weatherResult: StateFlow<Result<WeatherResponse?>> = _weatherResult
 
-    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse>> =
+    private val _daysWeatherResult: MutableStateFlow<Result<DaysWeatherResponse?>> =
         MutableStateFlow(Result.Loading())
-    val daysWeatherResult: StateFlow<Result<DaysWeatherResponse>> = _daysWeatherResult
+    val daysWeatherResult: StateFlow<Result<DaysWeatherResponse?>> = _daysWeatherResult
 
     fun getCurrentWeather(lat: Double, lon: Double) = viewModelScope.launch(Dispatchers.IO) {
         homeRepository.getCurrentWeather(lat, lon)

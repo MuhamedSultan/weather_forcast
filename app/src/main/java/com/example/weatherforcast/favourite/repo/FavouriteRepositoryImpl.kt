@@ -9,10 +9,10 @@ import com.example.weatherforcast.utils.Result
 import kotlinx.coroutines.flow.Flow
 
 class FavouriteRepositoryImpl(private val remoteDataSource: RemoteDataSource,private val localDataSource: LocalDataSource):FavouriteRepository {
-    override suspend fun getCurrentWeather(lat: Double, lon: Double) : Flow<Result<WeatherResponse>> {
+    override suspend fun getCurrentWeather(lat: Double, lon: Double) : Flow<Result<WeatherResponse?>> {
         return remoteDataSource.getCurrentWeather(lat,lon)
     }
-    override suspend fun getDaysWeather(lat: Double, lon: Double): Flow<Result<DaysWeatherResponse>> {
+    override suspend fun getDaysWeather(lat: Double, lon: Double): Flow<Result<DaysWeatherResponse?>> {
         return remoteDataSource.getDaysWeather(lat,lon)
     }
 

@@ -175,9 +175,9 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
 
         val limitedWeatherList = list.take(8).map { weather ->
             val time = timeFormat.format(inputFormat.parse(weather.dt_txt)!!)
-            val tempKelvin = weather.main.temp
-            val convertedTemperature = convertTemperature(tempKelvin, temperatureUnit)
-            weather.copy(dt_txt = time, main = weather.main.copy(temp = convertedTemperature))
+            val tempKelvin = weather.main?.temp
+            val convertedTemperature = convertTemperature(tempKelvin?:0.0, temperatureUnit)
+            weather.copy(dt_txt = time, main = weather.main?.copy(temp = convertedTemperature))
         }
 
         setupHoursRecyclerview(limitedWeatherList)
@@ -197,12 +197,12 @@ class FavouriteFragment : Fragment(), OnMapReadyCallback, OnFavouriteClick {
             val dayName = dayFormat.format(date)
 
             if (!weatherPerDay.containsKey(dayName)) {
-                val tempKelvin = weather.main.temp
-                val convertedTemperature = convertTemperature(tempKelvin, temperatureUnit)
+                val tempKelvin = weather.main?.temp
+                val convertedTemperature = convertTemperature(tempKelvin?:0.0, temperatureUnit)
 
                 weatherPerDay[dayName] = weather.copy(
                     dt_txt = dayName,
-                    main = weather.main.copy(temp = convertedTemperature)
+                    main = weather.main?.copy(temp = convertedTemperature)
                 )
             }
         }
