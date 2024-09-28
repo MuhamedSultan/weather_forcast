@@ -145,9 +145,9 @@ dependencies {
     androidTestImplementation ("androidx.arch.core:core-testing:2.1.0")
 
     //kotlinx-coroutines
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
-    androidTestImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
+    androidTestImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
 
 
 }

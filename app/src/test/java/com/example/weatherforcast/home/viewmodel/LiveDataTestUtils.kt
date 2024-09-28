@@ -23,8 +23,8 @@ suspend fun <T> StateFlow<T>.getOrAwaitValue(
                         job.complete()
                     }
                 }
-                afterCollect() // Execute any code after starting the collection
-                job.join() // Wait for the job to complete
+                afterCollect()
+//                job.join()
             }
         }
     } catch (e: TimeoutException) {

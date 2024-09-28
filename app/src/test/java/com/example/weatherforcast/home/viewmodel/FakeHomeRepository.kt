@@ -29,25 +29,27 @@ class FakeHomeRepository : HomeRepository {
     ): Flow<Result<WeatherResponse?>> {
         return flow {
             weatherResponse?.let {
-                emit((it) as Result<WeatherResponse?>)
-            }
+                emit(it as Result<WeatherResponse?>)
+            } ?: emit(Result.Error("No weather response set"))
         }
     }
-        override suspend fun getDaysWeather(
-            lat: Double,
-            lon: Double
-        ): Flow<Result<DaysWeatherResponse?>> {
-            TODO("Not yet implemented")
+
+    override suspend fun getDaysWeather(
+        lat: Double,
+        lon: Double
+    ): Flow<Result<DaysWeatherResponse?>> {
+        return flow {
+            daysWeatherResponse?.let {
+                emit(it as  Result<DaysWeatherResponse?>)
+            } ?: emit(Result.Error("No days weather response set"))
         }
-
-        override suspend fun addCurrentWeather(weatherResponse: WeatherResponse) {
-             flow {
-                 emit(weatherResponse)
-            }
-        }
-
-        override suspend fun addDaysWeather(daysWeatherResponse: DaysWeatherResponse) {
-
-        }
-
     }
+
+    override suspend fun addCurrentWeather(weatherResponse: WeatherResponse) {
+        this.weatherAdded = weatherResponse
+    }
+
+    override suspend fun addDaysWeather(daysWeatherResponse: DaysWeatherResponse) {
+        this.daysWeatherAdded = daysWeatherResponse
+    }
+}
