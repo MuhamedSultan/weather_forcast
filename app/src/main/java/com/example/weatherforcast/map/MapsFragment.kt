@@ -44,7 +44,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         (activity as AppCompatActivity?)?.supportActionBar?.hide()
 
         if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), "API_KEY")
+            Places.initialize(requireContext(), "ApiKey")
         }
 
         autoCompleteFragment = childFragmentManager.findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment

@@ -28,7 +28,6 @@ class RemoteDataSourceImpl : RemoteDataSource {
                     emit(Result.Error(response.message()))
                 }
             } catch (ex: Exception) {
-                Log.e("RemoteDataSourceImpl", "Error: ${ex.message}")
                 emit(Result.Error(ex.message.toString()))
             }
         }
@@ -52,7 +51,6 @@ class RemoteDataSourceImpl : RemoteDataSource {
                     emit(Result.Error(response.message()))
                 }
             } catch (ex: Exception) {
-                Log.e("RemoteDataSourceImpl", "Error: ${ex.message}")
                 emit(Result.Error(ex.message.toString()))
             }
         }
