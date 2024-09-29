@@ -37,10 +37,31 @@ class SettingsFragment : Fragment() {
     }
 
     private fun initializeSpinners() {
-        setupSpinner(binding.tempSpinner, R.array.temperature_unit, preferencesManager.getTemperatureUnit()?:"Celsius")
-        setupSpinner(binding.windSpeedSpinner, R.array.wind_speed, preferencesManager.getWindSpeedUnit()?:"Km/h")
-        setupSpinner(binding.languageSpinner, R.array.language_arr, getLanguageDisplayName(preferencesManager.getSelectedOption(PreferencesManager.KEY_LANGUAGE, "en")))
-        setupSpinner(binding.locationSpinner, R.array.location, preferencesManager.getSavedLocation()?:"Gps")
+        setupSpinner(
+            binding.tempSpinner,
+            R.array.temperature_unit,
+            preferencesManager.getTemperatureUnit() ?: "Celsius"
+        )
+        setupSpinner(
+            binding.windSpeedSpinner,
+            R.array.wind_speed,
+            preferencesManager.getWindSpeedUnit() ?: "Km/h"
+        )
+        setupSpinner(
+            binding.languageSpinner,
+            R.array.language_arr,
+            getLanguageDisplayName(
+                preferencesManager.getSelectedOption(
+                    PreferencesManager.KEY_LANGUAGE,
+                    "en"
+                )
+            )
+        )
+        setupSpinner(
+            binding.locationSpinner,
+            R.array.location,
+            preferencesManager.getSavedLocation() ?: "Gps"
+        )
     }
 
     private fun setupSpinner(spinner: Spinner, arrayResId: Int, selectedValue: String) {
@@ -54,40 +75,57 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setSpinnerListeners() {
-        binding.languageSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedLanguage ->
-            val languageCode = getLanguageCode(selectedLanguage)
-            if (preferencesManager.getSelectedOption(PreferencesManager.KEY_LANGUAGE, "en") != languageCode) {
-                preferencesManager.saveSelectedOption(PreferencesManager.KEY_LANGUAGE, languageCode)
-                updateLanguage(languageCode)
+        binding.languageSpinner.onItemSelectedListener =
+            createOnItemSelectedListener { selectedLanguage ->
+                val languageCode = getLanguageCode(selectedLanguage)
+                if (preferencesManager.getSelectedOption(
+                        PreferencesManager.KEY_LANGUAGE,
+                        "en"
+                    ) != languageCode
+                ) {
+                    preferencesManager.saveSelectedOption(
+                        PreferencesManager.KEY_LANGUAGE,
+                        languageCode
+                    )
+                    updateLanguage(languageCode)
+                }
             }
-        }
 
         binding.locationSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedLocation ->
             preferencesManager.saveLocationOption(selectedLocation)
 
-            if (selectedLocation != "Map") {
+            if (selectedLocation == "Map" || selectedLocation == "خريطة") {
+                if (!preferencesManager.isMapSelected()) {
+                    preferencesManager.saveMapSelected(true)
+                    Navigation.findNavController(requireView())
+                        .navigate(R.id.action_settingsFragment_to_mapsFragment)
+                }
+            } else {
                 preferencesManager.saveMapSelected(false)
             }
+        }
 
-            if (selectedLocation == "Map" && !preferencesManager.isMapSelected()) {
-                preferencesManager.saveMapSelected(true)
-                Navigation.findNavController(requireView()).navigate(R.id.action_settingsFragment_to_mapsFragment)
+
+
+        binding.tempSpinner.onItemSelectedListener =
+            createOnItemSelectedListener { selectedTemperatureUnit ->
+                preferencesManager.saveTemperatureUnit(selectedTemperatureUnit)
             }
-        }
 
-
-        binding.tempSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedTemperatureUnit ->
-            preferencesManager.saveTemperatureUnit(selectedTemperatureUnit)
-        }
-
-        binding.windSpeedSpinner.onItemSelectedListener = createOnItemSelectedListener { selectedWindSpeed ->
-            preferencesManager.saveWindSpeedUnit(selectedWindSpeed)
-        }
+        binding.windSpeedSpinner.onItemSelectedListener =
+            createOnItemSelectedListener { selectedWindSpeed ->
+                preferencesManager.saveWindSpeedUnit(selectedWindSpeed)
+            }
     }
 
     private fun createOnItemSelectedListener(action: (String) -> Unit): AdapterView.OnItemSelectedListener {
         return object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
                 val selectedValue = parent.getItemAtPosition(position).toString()
                 action(selectedValue)
             }

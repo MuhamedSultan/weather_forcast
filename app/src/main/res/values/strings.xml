@@ -27,17 +27,20 @@
     <string name="_24_hour_forecast">24-hour forecast</string>
     <string name="_5_days_forecast">5-days forecast</string>
     <string name="discover_new_places_and_add_them_to_favourite">Discover new places and add them to favourite</string>
-    <array name="notifications">
-        <item>Enable</item>
-        <item>Disable</item>
-    </array>
+    <string name="add_your_alert_to_up_to_date_with_weather_state">Add your alert to up to date with weather state</string>
+    <string name="map">Map</string>
+
 
     <array name="location">
+        <item></item>
         <item>Gps</item>
+        <item></item>
         <item>Map</item>
+        <item></item>
     </array>
 
     <array name="temperature_unit">
+        <item></item>
         <item>Kelvin</item>
         <item></item>
         <item>Celsius</item>
@@ -47,6 +50,7 @@
     </array>
 
     <array name="wind_speed">
+        <item></item>
         <item>km/h</item>
         <item></item>
         <item>m/s</item>
@@ -54,6 +58,7 @@
     </array>
 
     <array name="language_arr">
+        <item></item>
         <item>English</item>
         <item></item>
         <item>Arabic</item>

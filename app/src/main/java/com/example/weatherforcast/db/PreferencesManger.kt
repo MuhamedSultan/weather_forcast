@@ -2,6 +2,7 @@ package com.example.weatherforcast.db
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 
 class PreferencesManager(context: Context) {
 
@@ -15,8 +16,10 @@ class PreferencesManager(context: Context) {
     }
 
     fun getSelectedOption(key: String?, defaultValue: String? = "en"): String? {
-        return sharedPreferences.getString(key, defaultValue)
+        val value = sharedPreferences.getString(key, defaultValue)
+        return value
     }
+
 
 
     fun saveTemperatureUnit(value: String) {
