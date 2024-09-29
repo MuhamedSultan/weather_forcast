@@ -37,6 +37,7 @@ import com.example.weatherforcast.databinding.FragmentAlertBinding
 import com.example.weatherforcast.db.LocalDataSourceImpl
 import com.example.weatherforcast.db.WeatherDatabase
 import com.example.weatherforcast.pojo.alerts.Alerts
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -50,10 +51,12 @@ class AlertFragment : Fragment(), OnItemAlertClick {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        Toast.makeText(requireContext(),
-            if (isGranted) "Notifications permission granted"
+        Snackbar.make(
+            requireView(),
+            if (isGranted) "Notifications permission set successfully"
             else "Notifications permission denied",
-            Toast.LENGTH_SHORT).show()
+            Snackbar.LENGTH_SHORT
+        ).show()
     }
 
     private val REQUEST_OVERLAY_PERMISSION = 1001
@@ -71,7 +74,11 @@ class AlertFragment : Fragment(), OnItemAlertClick {
         alertViewModel = ViewModelProvider(this, factory)[AlertViewModel::class.java]
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = FragmentAlertBinding.inflate(inflater)
         return binding.root
     }
@@ -81,7 +88,9 @@ class AlertFragment : Fragment(), OnItemAlertClick {
         (activity as AppCompatActivity?)?.supportActionBar?.show()
 
         checkNotificationPermission()
-        binding.alertFab.setOnClickListener { showChoiceDialog() }
+        binding.alertFab.setOnClickListener {
+            showChoiceDialog()
+        }
         observeAlerts()
         createNotificationChannel()
 
@@ -90,7 +99,11 @@ class AlertFragment : Fragment(), OnItemAlertClick {
 
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
     }
@@ -112,7 +125,8 @@ class AlertFragment : Fragment(), OnItemAlertClick {
             val channel = NotificationChannel("weatherId", name, importance).apply {
                 this.description = description
             }
-            val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
@@ -132,21 +146,27 @@ class AlertFragment : Fragment(), OnItemAlertClick {
 
     private fun showDateTimePicker(alertType: String) {
         val calendar = Calendar.getInstance()
-        DatePickerDialog(requireContext(),
+        DatePickerDialog(
+            requireContext(),
             { _, year, month, dayOfMonth ->
                 calendar.set(year, month, dayOfMonth)
                 TimePickerDialog(requireContext(), { _, hourOfDay, minute ->
                     calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                     calendar.set(Calendar.MINUTE, minute)
-                    val formattedDateTime = "${dayOfMonth}/${month + 1}/${year} ${hourOfDay}:${minute}"
+                    val formattedDateTime =
+                        "${dayOfMonth}/${month + 1}/${year} ${hourOfDay}:${minute}"
 
                     when (alertType) {
                         "alarm" -> {
-                            setAlarm(calendar)
-                            alertViewModel.addAlert(Alerts(0,"alarm",formattedDateTime))
+                            lifecycleScope.launch {
+                                setAlarm(calendar, alertViewModel.getNextAlertId())
+                                alertViewModel.addAlert(Alerts(0, "alarm", formattedDateTime))
+                            }
                         }
-                        "notification" -> {sendNotification(calendar)
-                            alertViewModel.addAlert(Alerts(0,"notification",formattedDateTime))
+
+                        "notification" -> {
+                            sendNotification(calendar)
+                            alertViewModel.addAlert(Alerts(0, "notification", formattedDateTime))
 
                         }
                     }
@@ -159,10 +179,13 @@ class AlertFragment : Fragment(), OnItemAlertClick {
     }
 
     @SuppressLint("ScheduleExactAlarm")
-    private fun setAlarm(calendar: Calendar) {
+    private fun setAlarm(calendar: Calendar, alertId: Int) {
         if (!Settings.canDrawOverlays(requireContext())) {
             startActivityForResult(
-                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${requireContext().packageName}")),
+                Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${requireContext().packageName}")
+                ),
                 REQUEST_OVERLAY_PERMISSION
             )
         }
@@ -171,7 +194,7 @@ class AlertFragment : Fragment(), OnItemAlertClick {
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            0,
+            alertId,
             alarmIntent,
             PendingIntent.FLAG_IMMUTABLE
         )
@@ -204,9 +227,17 @@ class AlertFragment : Fragment(), OnItemAlertClick {
         )
 
         alarmManager = requireContext().getSystemService(ALARM_SERVICE) as AlarmManager
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent
+        )
 
-        Toast.makeText(requireContext(), "Notification scheduled at ${calendar.time}", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            requireContext(),
+            "Notification scheduled at ${calendar.time}",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     private fun setupAlertRecyclerView(alerts: List<Alerts>) {
@@ -216,12 +247,47 @@ class AlertFragment : Fragment(), OnItemAlertClick {
             adapter = alertAdapter
             layoutManager = alertManager
         }
+        if (alerts.isEmpty()) {
+            binding.alertIc.visibility = View.VISIBLE
+            binding.des.visibility = View.VISIBLE
+        } else {
+            binding.alertIc.visibility = View.GONE
+            binding.des.visibility = View.GONE
+        }
     }
 
     override fun deleteAlertItem(alert: Alerts) {
-        lifecycleScope.launch {
-            alertViewModel.deleteAlert(alert)
-
-        }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Confirm Deletion")
+            .setMessage("Are you sure you want to delete this alert?")
+            .setPositiveButton("Yes") { dialog, which ->
+                lifecycleScope.launch {
+                    alertViewModel.deleteAlert(alert)
+                    when (alert.alertType) {
+                        "alarm" -> cancelAlarm(alert.id)
+                        "notification" -> cancelNotification(alert.id)
+                    }
+                }
+            }
+            .setNegativeButton("No") { dialog, which ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
     }
+
+    private fun cancelAlarm(alertId: Int) {
+        val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmIntent = Intent(context, AlarmReceiver::class.java)
+        val pendingIntent =
+            PendingIntent.getBroadcast(context, alertId, alarmIntent, PendingIntent.FLAG_IMMUTABLE)
+        alarmManager.cancel(pendingIntent)
+    }
+
+    private fun cancelNotification(alertId: Int) {
+        val notificationManager =
+            requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel("weatherId", alertId)
+    }
+
 }

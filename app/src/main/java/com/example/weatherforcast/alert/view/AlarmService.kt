@@ -1,4 +1,5 @@
 package com.example.weatherforcast.alert.view
+
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -50,7 +51,7 @@ class AlarmService : Service() {
             PixelFormat.TRANSLUCENT
         )
 
-            layoutParams.gravity = Gravity.TOP
+        layoutParams.gravity = Gravity.TOP
 
         windowManager.addView(overlayView, layoutParams)
 
@@ -69,7 +70,8 @@ class AlarmService : Service() {
         val channelName = "weather_channel"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
+            val channel =
+                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
@@ -96,5 +98,4 @@ class AlarmService : Service() {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
-
 }

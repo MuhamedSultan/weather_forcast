@@ -28,4 +28,9 @@ class AlertViewModel(private val alertRepository: AlertRepository) : ViewModel()
         alertRepository.deleteAlert(alert)
         getAllAlerts()
     }
+
+    fun getNextAlertId(): Int {
+        val lastAlert = getAllAlerts.value?.maxByOrNull { it.id }
+        return (lastAlert?.id ?: 0) + 1
+    }
 }

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".alert.view.AlertFragment">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -26,4 +27,33 @@
         android:src="@drawable/add_ic"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/alert_ic"
+        android:layout_width="158dp"
+        android:layout_height="122dp"
+        android:layout_marginTop="304dp"
+        android:src="@drawable/alert_ic"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/des"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="@string/add_your_alert_to_up_to_date_with_weather_state"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/alert_ic"
+        app:layout_constraintVertical_bias="0.060000002" />
 </androidx.constraintlayout.widget.ConstraintLayout>
