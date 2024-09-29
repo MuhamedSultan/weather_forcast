@@ -3,13 +3,16 @@ package com.example.weatherforcast.home.view
 import RemoteDataSourceImpl
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import com.example.weatherforcast.utils.Result
 import androidx.fragment.app.Fragment
@@ -68,7 +71,7 @@ class HomeFragment : Fragment() {
         val dao = WeatherDatabase.getInstance(requireContext())?.weatherDao()
         val localDataSource = LocalDataSourceImpl(dao!!)
         val remoteDataSource = RemoteDataSourceImpl()
-        val repository = HomeRepositoryImpl(remoteDataSource, localDataSource,requireContext())
+        val repository = HomeRepositoryImpl(remoteDataSource, localDataSource, requireContext())
         val factory = HomeViewModelFactory(repository)
         homeViewModel = ViewModelProvider(this, factory)[HomeViewModel::class.java]
     }
@@ -172,11 +175,28 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+
         if (checkPermissions()) {
-            getLocation()
+            if (isGpsEnabled()) {
+                getLocation()
+            } else {
+                showGpsDisabledSnackbar()
+            }
         } else {
             requestLocationPermissions()
         }
+    }
+
+    private fun showGpsDisabledSnackbar() {
+        Snackbar.make(
+            requireView(),
+            "GPS is disabled. Please enable it.",
+            Snackbar.LENGTH_INDEFINITE
+        )
+            .setAction("Settings") {
+                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
+            .show()
     }
 
 
@@ -301,7 +321,7 @@ class HomeFragment : Fragment() {
         val limitedWeatherList = list.take(8).map { weather ->
             val time = timeFormat.format(inputFormat.parse(weather.dt_txt)!!)
             val tempKelvin = weather.main?.temp
-            val convertedTemperature = convertTemperature(tempKelvin?:0.0, temperatureUnit)
+            val convertedTemperature = convertTemperature(tempKelvin ?: 0.0, temperatureUnit)
             weather.copy(dt_txt = time, main = weather.main?.copy(temp = convertedTemperature))
         }
 
@@ -323,7 +343,7 @@ class HomeFragment : Fragment() {
 
             if (!weatherPerDay.containsKey(dayName)) {
                 val tempKelvin = weather.main?.temp
-                val convertedTemperature = convertTemperature(tempKelvin?:0.0, temperatureUnit)
+                val convertedTemperature = convertTemperature(tempKelvin ?: 0.0, temperatureUnit)
 
                 weatherPerDay[dayName] = weather.copy(
                     dt_txt = dayName,
@@ -361,6 +381,11 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun isGpsEnabled(): Boolean {
+        val locationManager =
+            requireContext().getSystemService(AppCompatActivity.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    }
 
 }
 
