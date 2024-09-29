@@ -146,36 +146,47 @@ class AlertFragment : Fragment(), OnItemAlertClick {
 
     private fun showDateTimePicker(alertType: String) {
         val calendar = Calendar.getInstance()
-        DatePickerDialog(
+
+        val datePickerDialog = DatePickerDialog(
             requireContext(),
+            R.style.CustomDatePickerDialog,
             { _, year, month, dayOfMonth ->
                 calendar.set(year, month, dayOfMonth)
-                TimePickerDialog(requireContext(), { _, hourOfDay, minute ->
-                    calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                    calendar.set(Calendar.MINUTE, minute)
-                    val formattedDateTime =
-                        "${dayOfMonth}/${month + 1}/${year} ${hourOfDay}:${minute}"
 
-                    when (alertType) {
-                        "alarm" -> {
-                            lifecycleScope.launch {
-                                setAlarm(calendar, alertViewModel.getNextAlertId())
-                                alertViewModel.addAlert(Alerts(0, "alarm", formattedDateTime))
+                TimePickerDialog(
+                    requireContext(),
+                    R.style.CustomTimePickerDialog,
+                    { _, hourOfDay, minute ->
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        calendar.set(Calendar.MINUTE, minute)
+                        val formattedDateTime =
+                            "${dayOfMonth}/${month + 1}/${year} ${hourOfDay}:${minute}"
+
+                        when (alertType) {
+                            "alarm" -> {
+                                lifecycleScope.launch {
+                                    setAlarm(calendar, alertViewModel.getNextAlertId())
+                                    alertViewModel.addAlert(Alerts(0, "alarm", formattedDateTime))
+                                }
+                            }
+                            "notification" -> {
+                                sendNotification(calendar)
+                                alertViewModel.addAlert(Alerts(0, "notification", formattedDateTime))
                             }
                         }
-
-                        "notification" -> {
-                            sendNotification(calendar)
-                            alertViewModel.addAlert(Alerts(0, "notification", formattedDateTime))
-
-                        }
-                    }
-                }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false).show()
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    false
+                ).show()
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+        )
+
+        datePickerDialog.show()
+        datePickerDialog.window?.setBackgroundDrawableResource(R.color.light_gray)
     }
 
     @SuppressLint("ScheduleExactAlarm")
